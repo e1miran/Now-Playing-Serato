@@ -3,13 +3,13 @@ __Now Playing__ is a tool written in Python to retrieve the current/last played 
 
 Initial release supports __MacOS only__, but a Windows release is being developed.
 
-# Pre-requisites
+## Pre-requisites
 * Active internet connection
 * Serato account with Live Playlists enabled
 
 For more info on Serato Live Playlists: https://support.serato.com/hc/en-us/articles/228019568-Live-Playlists
   
-# Installation
+## Installation
 * Dowload the latest release zip package here: https://github.com/e1miran/Now-Playing-Serato/releases/latest
 * Unzip the package and copy the entire unzipped folder containing both the app and config file to your "Applications" folder
 * Open the config file in a text editor, such as TextEdit, and configure the settings as indicated in the Configuration section below.
@@ -19,7 +19,7 @@ That's it.  Upon startup, the applicaton does not open a window.  However, you w
 
 ![Menu Bar Image](https://github.com/e1miran/Now-Playing-Serato/blob/master/menu-bar.png?raw=true)
 
-# Configuration
+## Configuration
 Open the config file in a text editor and configure the settings as needed.  See the examples below:
 
 ```
@@ -45,7 +45,7 @@ pref = "Now Playing "
 suff = ""
 ```
 
-# Usage
+## Usage
 1. In Serato, make sure you enable Live Playlists and start a new session. From the [Serato website](https://support.serato.com/hc/en-us/articles/228019568-Live-Playlists):
 
 >"To enable the Live Playlists feature go to the Expansion Pack tab on the Setup screen and check the Enable Live Playlists option. Once enabled, the Start Live Playlist button is now displayed in the History panel. Click this to start and stop your Live Playlist session."
