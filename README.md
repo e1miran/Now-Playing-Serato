@@ -20,7 +20,7 @@ That's it.  Upon startup, the applicaton does not open a window.  However, you w
 ![Menu Bar Image](https://github.com/e1miran/Now-Playing-Serato/blob/master/menu-bar.png?raw=true)
 
 # Configuration
-Open the config file in a text editor and configure the setting as needed.  See the examples below:
+Open the config file in a text editor and configure the settings as needed.  See the examples below:
 
 ```
 # URL address of your Serato Live Playlist (use quotes)
