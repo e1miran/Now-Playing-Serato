@@ -24,7 +24,7 @@ Open the config file in a text editor and configure the settings as needed.  See
 
 ```
 # URL address of your Serato Live Playlist (use quotes)
-url = "https://serato.com/playlists/<<USERNAME>>/9-21-20"
+url = "https://serato.com/playlists/<<USERNAME>>/live"
 
 # Path to the file where current track info is written (use quotes)
 file = "/Users/MacBook/Music/NowPlaying.txt"
