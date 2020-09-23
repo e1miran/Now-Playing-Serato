@@ -10,7 +10,7 @@ Initial release supports __MacOS only__, but a Windows release is being develope
 For more info on Serato Live Playlists: https://support.serato.com/hc/en-us/articles/228019568-Live-Playlists
   
 # Installation
-* Dowload the latest release zip package
+* Dowload the latest release zip package here: https://github.com/e1miran/Now-Playing-Serato/releases/latest
 * Unzip the package and copy the entire unzipped folder containing both the app and config file to your "Applications" folder
 * Open the config file in a text editor, such as TextEdit, and configure the settings as indicated in the Configuration section below.
 * Create a new, blank text file with the TextEdit app or similar text editor. Name and save this text file anywhere you like on your mac and close the text editor.
