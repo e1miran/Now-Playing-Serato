@@ -17,6 +17,8 @@ For more info on Serato Live Playlists: https://support.serato.com/hc/en-us/arti
 
 That's it.  Upon startup, the applicaton does not open a window.  However, you will see a "Now Playing" indicator in your menu bar.  Click on this indicator for a prompt to quit the application.
 
+![Menu Bar Image](https://github.com/e1miran/Now-Playing-Serato/blob/master/menu-bar.png?raw=true)
+
 # Configuration
 Open the config file in a text editor and configure the setting as needed.  See the examples below:
 
