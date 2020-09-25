@@ -1,0 +1,94 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2513
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+{\*\listtable{\list\listtemplateid1\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid1\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid1}
+{\list\listtemplateid2\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid101\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid2}
+{\list\listtemplateid3\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid201\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid3}
+{\list\listtemplateid4\listhybrid{\listlevel\levelnfc0\levelnfcn0\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{decimal\}.}{\leveltext\leveltemplateid301\'02\'00.;}{\levelnumbers\'01;}\fi-360\li720\lin720 }{\listname ;}\listid4}
+{\list\listtemplateid5\listhybrid{\listlevel\levelnfc0\levelnfcn0\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{decimal\}.}{\leveltext\leveltemplateid401\'02\'00.;}{\levelnumbers\'01;}\fi-360\li720\lin720 }{\listname ;}\listid5}}
+{\*\listoverridetable{\listoverride\listid1\listoverridecount0\ls1}{\listoverride\listid2\listoverridecount0\ls2}{\listoverride\listid3\listoverridecount0\ls3}{\listoverride\listid4\listoverridecount0\ls4}{\listoverride\listid5\listoverridecount0\ls5}}
+\margl1440\margr1440\vieww21480\viewh16320\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs28 \cf0 Now Playing in Serato Menu Bar Image
+\fs24 \
+Now Playing is a tool written in Python to retrieve the current/last played song in Serato DJ. It uses the Serato Live Playlists functionality and scrapes the data from the user's Live page on the Serato website. The data is written to a plain text file which can be fed to streaming services and apps like OBS Studio.\
+\
+It runs on the latest versions of macOS and Windows.\
+\
+
+\fs28 Pre-requisites
+\fs24 \
+\pard\tx220\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\li720\fi-720\pardirnatural\partightenfactor0
+\ls1\ilvl0\cf0 {\listtext	\uc0\u8226 	}Active internet connection\
+{\listtext	\uc0\u8226 	}Serato account with Live Playlists enabled\
+{\listtext	\uc0\u8226 	}For more info on Serato Live Playlists: https://support.serato.com/hc/en-us/articles/228019568-Live-Playlists\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+\cf0 \
+
+\fs28 Installation
+\fs24 \
+Mac\
+\pard\tx220\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\li720\fi-720\pardirnatural\partightenfactor0
+\ls2\ilvl0\cf0 {\listtext	\uc0\u8226 	}Dowload the latest macOS release zip package here: https://github.com/e1miran/Now-Playing-Serato/releases/latest\
+{\listtext	\uc0\u8226 	}Unzip the package and copy the entire unzipped folder containing both the app and config file to your "Applications" folder.\
+{\listtext	\uc0\u8226 	}From that location, open the config file in a text editor, such as TextEdit, and configure the settings as indicated in the Configuration section below.\
+{\listtext	\uc0\u8226 	}Create a new, blank text file with the TextEdit app or similar text editor. Name and save this text file anywhere you like on your mac and close the text editor.\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+\cf0 \
+Windows\
+\pard\tx220\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\li720\fi-720\pardirnatural\partightenfactor0
+\ls3\ilvl0\cf0 {\listtext	\uc0\u8226 	}Dowload the latest Windows release zip package here: https://github.com/e1miran/Now-Playing-Serato/releases/latest\
+{\listtext	\uc0\u8226 	}Unzip the package and copy the entire unzipped folder containing all files to the directory you'd like the app to run from (i.e.: C:\\Program Files).\
+{\listtext	\uc0\u8226 	}From that location, open the config file in a text editor, such as Notepad, and configure the settings as indicated in the Configuration section below.\
+{\listtext	\uc0\u8226 	}Create a new, blank text file with the Notepad app or similar text editor. Name and save this text file anywhere you like on your pc and close the text editor.\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+\cf0 \
+That's it. Upon startup, the applicaton does not open a window. However, on Windows you'll see the app's icon in the system task tray at the bottom right. For Mac, the app icon will be added to the menu bar at the top right of your screen. Right-click on this icon for a menu of actions.\
+\
+
+\fs28 Uninstallation
+\fs24 \
+The process for uninstalling the app is the same on both platforms. Simply delete the entire folder from the location to where you pasted it.\
+\
+
+\fs28 Configuration
+\fs24 \
+Open the config file in a text editor and configure the settings as needed. See the examples below:\
+\
+	# URL address of your Serato Live Playlist (use quotes)\
+	url = "https://serato.com/playlists/<<USERNAME>>/live"\
+\
+	# Path to the file where current track info is written (use quotes)\
+	file = "C:\\<<PATH>>\\NowPlaying.txt"\
+\
+	# Time (seconds) that needs to elapse before polling for a new song\
+	time = 7.5\
+\
+	# Multiple Line flag:  0 = all data written on one line, 1 = artist on first line and song on second line\
+	multi = 1\
+\
+	# Quotes Around Song Name flag:  0 = no quotes, 1 = quotes\
+	quote = 1\
+\
+	# Prefix:  characters to be written before data (use quotes). i.e.: "Now Playing: "\
+	pref = ""\
+\
+	# Suffix:  characters to be written after data (use quotes). Can be used for blank space at the end of scrolling text. i.e.: "                       "\
+	suff = ""\
+\
+
+\fs28 Usage
+\fs24 \
+\pard\tx220\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\li720\fi-720\pardirnatural\partightenfactor0
+\ls4\ilvl0\cf0 {\listtext	1.	}In Serato, make sure you enable Live Playlists and start a new session. From the Serato website:\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+\cf0 	\
+	"To enable the Live Playlists feature go to the Expansion Pack tab on the Setup screen and check the \
+	Enable Live Playlists option. Once enabled, the Start Live Playlist button is now displayed in the History\
+	panel. Click this to start and stop your Live Playlist session."\
+\
+\pard\tx220\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\li720\fi-720\pardirnatural\partightenfactor0
+\ls5\ilvl0\cf0 {\listtext	2.	}Once a new playlist session is started, Serato will automatically open your web browser to your Live Playlist. IMPORTANT: You will need to select "Edit Details" on the Live Playlist webpage and change your playlist to "Public", or else the Now Playing app will not be able to retrieve any song data.\
+{\listtext	3.	}Start the Now Playing app. You can check the target text file to see what is being written.}
