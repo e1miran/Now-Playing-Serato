@@ -24,7 +24,9 @@ For more info on Serato Live Playlists: https://support.serato.com/hc/en-us/arti
 
 That's it.  Upon startup, the applicaton does not open a window. However, on Windows you'll see the app's icon in the system task tray at the bottom right. For Mac, the app icon will be added to the menu bar at the top right of your screen. Right-click on this icon for a menu of actions.
 
-macOS  ![Menu Bar GIF](https://github.com/e1miran/Now-Playing-Serato/blob/master/git-images/snpMac.gif?raw=true)  Windows  ![Task Tray GIF](https://github.com/e1miran/Now-Playing-Serato/blob/master/git-images/snpWin.gif?raw=true)
+![Task Tray GIF](https://github.com/e1miran/Now-Playing-Serato/blob/master/git-images/snpWin.gif?raw=true) Windows
+
+![Menu Bar GIF](https://github.com/e1miran/Now-Playing-Serato/blob/master/git-images/snpMac.gif?raw=true) macOS
 
 ### Uninstallation
 The process for uninstalling the app is the same on both platforms.  Simply delete the entire folder from the location to where you pasted it.
