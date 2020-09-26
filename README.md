@@ -14,13 +14,13 @@ For more info on Serato Live Playlists: https://support.serato.com/hc/en-us/arti
 * Dowload the latest macOS release zip package here: https://github.com/e1miran/Now-Playing-Serato/releases/latest
 * Unzip the package and copy the entire unzipped folder containing both the app and config file to your "Applications" folder.
 * From that location, open the config file in a text editor, such as TextEdit, and configure the settings as indicated in the Configuration section below.
-* Create a new, blank text file with the TextEdit app or similar text editor. Name and save this text file anywhere you like on your mac and close the text editor.
+* Create a new, blank text file with the TextEdit app or similar text editor. Name and save this text file anywhere you like on your mac and close the text editor. You can name it whatever you like, since you can specify the location and name in the config file.
 
 ### Windows
 * Dowload the latest Windows release zip package here: https://github.com/e1miran/Now-Playing-Serato/releases/latest
 * Unzip the package and copy the entire unzipped folder containing all files to the directory you'd like the app to run from (i.e.: C:\Program Files).
 * From that location, open the config file in a text editor, such as Notepad, and configure the settings as indicated in the Configuration section below.
-* Create a new, blank text file with the Notepad app or similar text editor. Name and save this text file anywhere you like on your pc and close the text editor.
+* Create a new, blank text file with the Notepad app or similar text editor. Name and save this text file anywhere you like on your pc and close the text editor. You can name it whatever you like, since you can specify the location and name in the config file.
 
 That's it.  Upon startup, the applicaton does not open a window. However, on Windows you'll see the app's icon in the system task tray at the bottom right. For Mac, the app icon will be added to the menu bar at the top right of your screen. Right-click on this icon for a menu of actions.
 
