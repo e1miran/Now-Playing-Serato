@@ -18,7 +18,8 @@ import requests
 import configparser
 import threading
 from lxml import html
-from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction
+from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction, QLabel, QVBoxLayout, QCheckBox, \
+    QPushButton, QLineEdit, QFileDialog, QWidget
 from PyQt5.QtGui import QIcon
 import tkinter
 from tkinter import messagebox
@@ -47,10 +48,10 @@ if getattr(sys, 'frozen', False) and sys.platform == "darwin":
     working_dir = os.path.abspath(os.path.dirname(sys.executable))
     working_dir = working_dir.split("SeratoNowPlaying.app/Contents/MacOS")
     config_file = os.path.abspath(working_dir[0] + "config.ini")
-    ico = os.path.abspath(os.path.join(bundle_dir, "bin/icon.ico"))
+    ico = os.path.abspath(os.path.join(bundle_dir, "icon.ico"))
 else:
-    config_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "bin/config.ini"))
-    ico = os.path.abspath(os.path.join(os.path.dirname(__file__), "bin/icon.ico"))
+    config_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "config.ini"))
+    ico = os.path.abspath(os.path.join(os.path.dirname(__file__), "icon.ico"))
 
 # read config and raise error if not found
 if os.path.exists(config_file):
@@ -207,6 +208,12 @@ def cleanquit():
     writetrack("")
     sys.exit()
 # END FUNCTIONS BLOCK ####
+
+
+# create settings UI window
+configWin = QWidget()
+layout = QVBoxLayout()
+
 
 
 # create systemtray UI
