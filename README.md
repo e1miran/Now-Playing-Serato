@@ -42,28 +42,28 @@ The process for uninstalling the app is the same on both platforms.  Simply dele
 ## Settings
 Upon initial execution of the app, a settings window will appear. Subsequently, the settings can also be accessed from the icon in the Windows task tray or Mac menu bar.  The available configuration settings are:
 
-* URL - The web address of your Serato Live Playlist
+* __URL__ - The web address of your Serato Live Playlist
     * This should be something like: ```https://serato.com/playlists/<<USERNAME>>/live```
     
-* File - This is the file to which the current track info is written
+* __File__ - This is the file to which the current track info is written
 
-* Polling Interval - The amount of time, in seconds, that must elapse before the app checks for a new track.  If not populated, it will default to 10 seconds.
+* __Polling Interval__ - The amount of time, in seconds, that must elapse before the app checks for a new track.  If not populated, it will default to 10 seconds.
     * The goal is to retrieve the new track info immediately as it's updated to the Serato website.  However, too short of an interval could affect the website's performance.
 
-* Write Delay - The amount of time, in seconds to delay writing the new track info once it's retrieved. If not populated, it will default to 0 seconds.
+* __Write Delay__ - The amount of time, in seconds to delay writing the new track info once it's retrieved. If not populated, it will default to 0 seconds.
     * A setting of zero will update the track info on screen immediately as a new track is detected.  This may be too soon for some DJ's mixing style, so a delay can be added.
     
-* Multiple Line Indicator - Selecting this option will write the song information on separate lines.
+* __Multiple Line Indicator__ - Selecting this option will write the song information on separate lines.
     * If selected, Artist will be written on the first line and Song on the second.  Otherwise it is written on one line, with Artist and song separated by a hyphen.
 
-* Song Quote Indicator - Selecting this option will surround the song title with quotes.
+* __Song Quote Indicator__ - Selecting this option will surround the song title with quotes.
 
-* Prefix - Allows to specify characters to be written before the track info. 
+* __Prefix__ - Allows to specify characters to be written before the track info. 
     * e.g., "Now Playing: "
 
-* Suffix - Allows to specify characters to be written after the track info.
+* __Suffix__ - Allows to specify characters to be written after the track info.
 
-* Notification Indicator - Selecting this option will show a system notification when new track info is detected.
+* __Notification Indicator__ - Selecting this option will show a system notification when new track info is detected.
     * This is useful for verifying that the app is actually polling and retrieving data.
     * The track info will be displayed in the notification.
 
