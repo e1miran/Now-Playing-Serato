@@ -4,6 +4,13 @@ __Now Playing__ is a tool written in Python to retrieve the current/last played 
 It runs on the latest versions of macOS and Windows. 
 [__IMPORTANT__ note for macOS Mojave users](#important-note-for-macos-mojave-users)
 
+#### New in version 1.2.0
+* Added UI for settings configuration. No more user accessible config.ini file.
+* Added ability to delay writing newly retrieved track info to the text file.
+* Changed Start/Stop to Pause/Resume in the system tray menu. This allows the user to suspend writing of new track info.
+* Added ability to show system notification when new track is detected. This can be turned on/off in settings. Default is 'off'.
+* Code enhancements due to new functionality.
+
 ## Pre-requisites
 * Active internet connection
 * Serato account with Live Playlists enabled
