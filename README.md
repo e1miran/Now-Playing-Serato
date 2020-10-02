@@ -69,7 +69,7 @@ Upon initial execution of the app, a settings window will appear. Subsequently, 
 
 3. Start the __Now Playing__ app.  The app can be controlled and configured by accessing the menu from the icon in the Windows system tray or Mac menu bar.
 
-###IMPORTANT Note For macOS Mojave users
+### IMPORTANT Note For macOS Mojave users
 Mojave users may encounter that the app will not open on the initial execution even after allowing it permission in the system security settings.  This is not a direct issue with the app, instead it's due to an Apple security measure for unsigned apps called [App Translocation](https://lapcatsoftware.com/articles/app-translocation.html).
 Before attempting to execute the app for the first time, you may follow one of these solutions:
 
