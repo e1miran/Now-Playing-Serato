@@ -4,9 +4,9 @@ block_cipher = None
 
 
 a = Analysis(['SeratoNowPlaying.py'],
-             pathex=['/Volumes/Space/OneDrive/Documents/SeratoNowPlaying/dev/working'],
+             pathex=['/Users/miranda/Documents/GitHub/Now-Playing-Serato/Serato-Now-Playing'],
              binaries=[],
-             datas=[('./icon.ico', '.')],
+             datas=[('bin/icon.ico', './bin')],
              hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],
@@ -19,23 +19,26 @@ pyz = PYZ(a.pure, a.zipped_data,
              cipher=block_cipher)
 exe = EXE(pyz,
           a.scripts,
-          a.binaries,
-          a.zipfiles,
-          a.datas,
           [],
+          exclude_binaries=True,
           name='SeratoNowPlaying',
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
           upx=True,
-          upx_exclude=[],
-          runtime_tmpdir=None,
-          console=False , icon='seratoPlaying.icns')
-app = BUNDLE(exe,
+          console=False , icon='resources/seratoPlaying.icns')
+coll = COLLECT(exe,
+               a.binaries,
+               a.zipfiles,
+               a.datas,
+               strip=False,
+               upx=True,
+               upx_exclude=[],
+               name='SeratoNowPlaying')
+app = BUNDLE(coll,
              name='SeratoNowPlaying.app',
-             icon='seratoPlaying.icns',
+             icon='resources/seratoPlaying.icns',
              bundle_identifier=None, 
              info_plist={
                 'LSUIElement': True
-             }
-             )
+             })
