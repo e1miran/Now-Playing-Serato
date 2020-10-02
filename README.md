@@ -2,7 +2,7 @@
 __Now Playing__ is a tool written in Python to retrieve the current/last played song in Serato DJ.  It uses the Serato Live Playlists functionality and scrapes the data from the user's Live page on the Serato website.  The data is written to a plain text file which can be fed to streaming services and apps like OBS Studio. 
 
 It runs on the latest versions of macOS and Windows. 
-[__IMPORTANT__ note for macOS Sierra and Mojave users](#important-for-macos-sierra-and-mojave-users)
+[__IMPORTANT__ note for macOS users](#important-note)
 
 #### New in version 1.2.0
 * Added UI for settings configuration. No more user accessible config.ini file.
@@ -23,7 +23,11 @@ For more info on Serato Live Playlists: https://support.serato.com/hc/en-us/arti
 * Unzip the package and place the unzipped 'SeratoNowPlaying.app' file in your "Applications" folder or any other location that you desire.
 * Create a new, blank text file with the TextEdit app or similar text editor. Name and save this text file anywhere you like on your mac and close the text editor. You can name it whatever you like.
 
-[__IMPORTANT__ note for macOS Sierra and Mojave users](#important-for-macos-sierra-and-mojave-users)
+#### IMPORTANT NOTE
+Due to security measures in macOS Sierra and later, apps downloaded from outside of the Mac App Store that are unsigned may have limitations placed on them that will prevent them from operating correctly, or even opening at all.  To prevent this from happening:
+
+* Do not unzip the downloaded zip package directly to the folder from where you will be running it. Instead unzip it from another location such as the "Downloads" folder and then move the 'SeratoNowPlaying.app' to your destination folder (e.g., "Applications"). Then run the app from the destination folder.
+* If the above doesn't work, or you tried running it before moving the app, open Terminal and type: ```sudo xattr -r -d com.apple.quarantine /path/to/MyApp.app (replace with the correct path)```.
 
 ### Windows
 * Dowload the latest Windows release zip package here: https://github.com/e1miran/Now-Playing-Serato/releases/latest
@@ -75,11 +79,3 @@ Upon initial execution of the app, a settings window will appear. Subsequently, 
 2. Once a new playlist session is started, Serato will automatically open your web browser to your Live Playlist. __IMPORTANT:__ You will need to select "Edit Details" on the Live Playlist webpage and change your playlist to "Public", or else the __Now Playing__ app will not be able to retrieve any song data. The webpage does not need to remain open.  So you can close it once you ensure that the playlist has been made public.
 
 3. Start the __Now Playing__ app.  The app can be controlled and configured by accessing the menu from the icon in the Windows system tray or Mac menu bar.
-
-### IMPORTANT For macOS Sierra and Mojave users
-Mojave users may encounter that the app will not open on the initial execution even after allowing it permission in the system security settings.  This is not a direct issue with the app, instead it's due to an Apple security measure for unsigned apps called [App Translocation](https://lapcatsoftware.com/articles/app-translocation.html).
-Before attempting to execute the app for the first time, you may follow one of these solutions:
-
-1. Simply move the app from its current directory to a different directory. Then move it back.
-
-2. Open Terminal and type: ```sudo xattr -r -d com.apple.quarantine /path/to/MyApp.app``` (replace with the correct path).
