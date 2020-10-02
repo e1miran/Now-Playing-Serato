@@ -2,7 +2,7 @@
 __Now Playing__ is a tool written in Python to retrieve the current/last played song in Serato DJ.  It uses the Serato Live Playlists functionality and scrapes the data from the user's Live page on the Serato website.  The data is written to a plain text file which can be fed to streaming services and apps like OBS Studio. 
 
 It runs on the latest versions of macOS and Windows. 
-[__IMPORTANT__ note for macOS Mojave users](#important-for-macos-mojave-users)
+[__IMPORTANT__ note for macOS Mojave users](#important-for-sierra-and-macos-mojave-users)
 
 #### New in version 1.2.0
 * Added UI for settings configuration. No more user accessible config.ini file.
@@ -23,7 +23,7 @@ For more info on Serato Live Playlists: https://support.serato.com/hc/en-us/arti
 * Unzip the package and place the unzipped 'SeratoNowPlaying.app' file in your "Applications" folder or any other location that you desire.
 * Create a new, blank text file with the TextEdit app or similar text editor. Name and save this text file anywhere you like on your mac and close the text editor. You can name it whatever you like.
 
-[__IMPORTANT__ note for macOS Mojave users](#important-for-macos-mojave-users)
+[__IMPORTANT__ note for macOS Mojave users](#important-for-sierra-and-macos-mojave-users)
 
 ### Windows
 * Dowload the latest Windows release zip package here: https://github.com/e1miran/Now-Playing-Serato/releases/latest
@@ -76,7 +76,7 @@ Upon initial execution of the app, a settings window will appear. Subsequently, 
 
 3. Start the __Now Playing__ app.  The app can be controlled and configured by accessing the menu from the icon in the Windows system tray or Mac menu bar.
 
-### IMPORTANT For macOS Mojave users
+### IMPORTANT For macOS Sierra and Mojave users
 Mojave users may encounter that the app will not open on the initial execution even after allowing it permission in the system security settings.  This is not a direct issue with the app, instead it's due to an Apple security measure for unsigned apps called [App Translocation](https://lapcatsoftware.com/articles/app-translocation.html).
 Before attempting to execute the app for the first time, you may follow one of these solutions:
 
