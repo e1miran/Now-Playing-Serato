@@ -27,7 +27,7 @@ For more info on Serato Live Playlists: https://support.serato.com/hc/en-us/arti
 Due to security measures in macOS Sierra and later, apps downloaded from outside of the Mac App Store that are unsigned may have limitations placed on them that will prevent them from operating correctly, or even opening at all.  To prevent this from happening:
 
 * Do not unzip the downloaded zip package directly to the folder from where you will be running it. Instead unzip it from another location such as the "Downloads" folder and then move the 'SeratoNowPlaying.app' to your destination folder (e.g., "Applications"). Then run the app from the destination folder.
-* If after following the step above the app does not open, or you tried running it before moving the app, open Terminal and type: ```sudo xattr -r -d com.apple.quarantine /path/to/MyApp.app``` (replace with the correct path).
+* If after following the step above the app does not open, or you tried running it before moving the app, open Terminal and type: ```sudo xattr -r -d com.apple.quarantine /path/to/MyApp.app``` (replace with the correct path to the app).
 
 ### Windows
 * Dowload the latest Windows release zip package here: https://github.com/e1miran/Now-Playing-Serato/releases/latest
