@@ -34,7 +34,7 @@ Due to security measures in macOS Sierra and later, apps downloaded from outside
 * Unzip the package and copy the entire unzipped folder containing the 'SeratoNowPlaying.exe' file and supporting files to the directory you'd like the app to run from (i.e.: C:\Program Files).
 * Create a new, blank text file with the Notepad app or similar text editor. Name and save this text file anywhere you like on your pc and close the text editor. You can name it whatever you like.
 
-That's it. Execute the app from the location where you placed it. The first time you run the app a settings window will appear. Populate the fields accordingly and press save. Once saved, the app will start polling for new songs. The app can be controlled and exited from the system task tray on Windows or the menu bar icon on macOS.
+That's it. Execute the app from the location where you placed it. On Windows, you will need to right-click and select "Run as Administrator' the first time you use the app, this allows the initial configiguration file to be written. The first time you run the app a settings window will appear. Populate the fields accordingly and press save. Once saved, the app will start polling for new songs. The app can be controlled and exited from the system task tray on Windows or the menu bar icon on macOS.
 
 ![Task Tray GIF](https://github.com/e1miran/Now-Playing-Serato/blob/master/git-images/snpWin.gif?raw=true) Windows
 
