@@ -86,6 +86,9 @@ Upon initial execution of the app, a settings window will appear. Subsequently, 
 * __Notification Indicator__ - Selecting this option will show a system notification when new track info is detected.
     * This is useful for verifying that the app is actually polling and retrieving data.
     * The track info will be displayed in the notification.
+    
+![Local Mode Settings](https://github.com/e1miran/Now-Playing-Serato/blob/master/git-images/local.png?raw=true)
+![Remote Mode Settings](https://github.com/e1miran/Now-Playing-Serato/blob/master/git-images/remote.png?raw=true)
 
 ## Usage
 ### Local Mode
