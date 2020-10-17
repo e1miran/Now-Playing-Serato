@@ -46,9 +46,9 @@ That's it. Execute the app from the location where you placed it. On Windows, yo
 
 The first time you run the app a settings window will appear. Populate the fields accordingly and press save. Once saved, the app will start polling for new songs. The app can be controlled and exited from the system task tray on Windows or the menu bar icon on macOS.
 
-![Task Tray GIF](https://github.com/e1miran/Now-Playing-Serato/blob/master/git-images/snpWin.gif?raw=true) Windows
+![Task Tray](https://github.com/e1miran/Now-Playing-Serato/blob/master/git-images/systray.png?raw=true) Windows
 
-![Menu Bar GIF](https://github.com/e1miran/Now-Playing-Serato/blob/master/git-images/snpMac.gif?raw=true) macOS
+![Menu Bar](https://github.com/e1miran/Now-Playing-Serato/blob/master/git-images/menubar.png?raw=true) macOS
 
 ### Uninstallation
 The process for uninstalling the app is the same on both platforms.  Simply delete the file or folder from the location to where you pasted it.
