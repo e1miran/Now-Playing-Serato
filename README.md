@@ -5,7 +5,7 @@ Starting with the current version, __Now Playing__ retrieves the current track f
 
 Previous versions of __Now Playing__ could only use a remote method of retrieving song data by leveraging the Serato Live Playlists functionality and scraping the data from the user's Live page on the Serato website. This legacy method remains an option for when the user requires streaming from a PC that is not the same on which Serato is running. 
 
-It runs on the latest versions of macOS and Windows. 
+It runs on the latest versions of Windows and macOS (Mojave and newer). 
 [*__IMPORTANT__ note for macOS users*](#important-note)
 
 #### New in version 1.3.0
@@ -26,12 +26,13 @@ For more info on Serato Live Playlists: https://support.serato.com/hc/en-us/arti
   
 ## Installation
 ### Mac
+At the moment the app is only supported for macOS Mojave and newer.
 * Dowload the latest macOS release zip package here: https://github.com/e1miran/Now-Playing-Serato/releases/latest
 * Unzip the package and place the unzipped 'SeratoNowPlaying.app' file in your "Applications" folder or any other location that you desire.
 * Create a new, blank text file with the TextEdit app or similar text editor. Name it as you please, and save this text file anywhere you like on your mac and close the text editor.
 
 #### *Important note for macOS users*
-Due to security measures in macOS Sierra and later, apps downloaded from outside of the Mac App Store that are unsigned may have limitations placed on them that will prevent them from operating correctly, or even opening at all.  To prevent this from happening:
+Due to security measures in macOS Sierra and later, apps downloaded from outside of the Mac App Store that are unsigned may have limitations placed on them that will prevent them from operating correctly, or even opening at all. The app has been verified to open on Mojave and newer versions of macOS by following the steps below. Versions prior to Mojave have not been verified and are not currently supported.
 
 * Do not unzip the downloaded zip package directly to the folder from where you will be running it. Instead unzip it in a location such as the "Downloads" folder and then move the 'SeratoNowPlaying.app' to your destination folder (e.g., "Applications"). Then run the app from the destination folder.
 * If after following the step above the app does not open, or you tried running it before moving the app, open Terminal and type: ```sudo xattr -r -d com.apple.quarantine /path/to/MyApp.app``` (replace with the correct path to the app).
