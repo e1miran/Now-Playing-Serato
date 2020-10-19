@@ -6,7 +6,7 @@ Starting with the current version, __Now Playing__ retrieves the current track f
 Previous versions of __Now Playing__ could only use a remote method of retrieving song data by leveraging the Serato Live Playlists functionality and scraping the data from the user's Live page on the Serato website. This legacy method remains an option for when the user requires streaming from a PC that is not the same on which Serato is running. 
 
 It runs on the latest versions of Windows and macOS (Mojave and newer). 
-[*__IMPORTANT__ note for macOS users*](#important-note)
+[*__IMPORTANT__ note for macOS users*](#important-note-for-macos-users)
 
 #### New in version 1.3.0
 * Added ability to read latest track info from Serato library history log. User now can choose  between local or remote (Serato Live Playlists) polling methods.
