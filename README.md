@@ -5,8 +5,8 @@ Starting with the current version, __Now Playing__ retrieves the current track f
 
 Previous versions of __Now Playing__ could only use a remote method of retrieving song data by leveraging the Serato Live Playlists functionality and scraping the data from the user's Live page on the Serato website. This legacy method remains an option for when the user requires streaming from a PC that is not the same on which Serato is running. 
 
-It runs on the latest versions of macOS and Windows. 
-[*__IMPORTANT__ note for macOS users*](#important-note)
+It runs on the latest versions of Windows and macOS (Mojave and newer). 
+[*__IMPORTANT__ note for macOS users*](#important-note-for-macos-users)
 
 #### New in version 1.3.0
 * Added ability to read latest track info from Serato library history log. User now can choose  between local or remote (Serato Live Playlists) polling methods.
@@ -26,12 +26,13 @@ For more info on Serato Live Playlists: https://support.serato.com/hc/en-us/arti
   
 ## Installation
 ### Mac
+At the moment the app is only supported for macOS Mojave and newer.
 * Dowload the latest macOS release zip package here: https://github.com/e1miran/Now-Playing-Serato/releases/latest
 * Unzip the package and place the unzipped 'SeratoNowPlaying.app' file in your "Applications" folder or any other location that you desire.
 * Create a new, blank text file with the TextEdit app or similar text editor. Name it as you please, and save this text file anywhere you like on your mac and close the text editor.
 
 #### *Important note for macOS users*
-Due to security measures in macOS Sierra and later, apps downloaded from outside of the Mac App Store that are unsigned may have limitations placed on them that will prevent them from operating correctly, or even opening at all.  To prevent this from happening:
+Due to security measures in macOS Sierra and later, apps downloaded from outside of the Mac App Store that are unsigned may have limitations placed on them that will prevent them from operating correctly, or even opening at all. The app has been verified to open on Mojave and newer versions of macOS by following the steps below. Versions prior to Mojave have not been verified and are not currently supported.
 
 * Do not unzip the downloaded zip package directly to the folder from where you will be running it. Instead unzip it in a location such as the "Downloads" folder and then move the 'SeratoNowPlaying.app' to your destination folder (e.g., "Applications"). Then run the app from the destination folder.
 * If after following the step above the app does not open, or you tried running it before moving the app, open Terminal and type: ```sudo xattr -r -d com.apple.quarantine /path/to/MyApp.app``` (replace with the correct path to the app).
@@ -46,9 +47,9 @@ That's it. Execute the app from the location where you placed it. On Windows, yo
 
 The first time you run the app a settings window will appear. Populate the fields accordingly and press save. Once saved, the app will start polling for new songs. The app can be controlled and exited from the system task tray on Windows or the menu bar icon on macOS.
 
-![Task Tray GIF](https://github.com/e1miran/Now-Playing-Serato/blob/master/git-images/snpWin.gif?raw=true) Windows
+![Task Tray](https://github.com/e1miran/Now-Playing-Serato/blob/master/git-images/systray.png?raw=true) Windows
 
-![Menu Bar GIF](https://github.com/e1miran/Now-Playing-Serato/blob/master/git-images/snpMac.gif?raw=true) macOS
+![Menu Bar](https://github.com/e1miran/Now-Playing-Serato/blob/master/git-images/menubar.png?raw=true) macOS
 
 ### Uninstallation
 The process for uninstalling the app is the same on both platforms.  Simply delete the file or folder from the location to where you pasted it.
@@ -86,6 +87,9 @@ Upon initial execution of the app, a settings window will appear. Subsequently, 
 * __Notification Indicator__ - Selecting this option will show a system notification when new track info is detected.
     * This is useful for verifying that the app is actually polling and retrieving data.
     * The track info will be displayed in the notification.
+    
+![Local Mode Settings](https://github.com/e1miran/Now-Playing-Serato/blob/master/git-images/local.png?raw=true)
+![Remote Mode Settings](https://github.com/e1miran/Now-Playing-Serato/blob/master/git-images/remote.png?raw=true)
 
 ## Usage
 ### Local Mode
