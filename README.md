@@ -33,7 +33,6 @@ For more info on Serato Live Playlists: https://support.serato.com/hc/en-us/arti
   
 ## Installation
 ### Mac
-At the moment the app is only supported for macOS Mojave and newer.
 * Dowload the latest macOS release zip package here: https://github.com/e1miran/Now-Playing-Serato/releases/latest
 * Unzip the package and place the unzipped 'SeratoNowPlaying.app' file in your "Applications" folder or any other location that you desire.
 * Create a new, blank text file with the TextEdit app or similar text editor. Name it as you please, and save this text file anywhere you like on your mac and close the text editor.
