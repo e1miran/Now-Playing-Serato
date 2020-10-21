@@ -8,7 +8,7 @@ Previous versions of __Now Playing__ could only use a remote method of retrievin
 It runs on the latest versions of Windows and macOS (High Sierra and newer). 
 [*__IMPORTANT__ note for macOS users*](#important-note-for-macos-users)
 
-### New in version 1.4.0
+#### New in version 1.4.0
 * Fix for issue where Settings UI window did not fit on smaller resolution screens.
     The window is now re-sizeable and scrolling is enabled.
 * Augmented the suffix and prefix functionality. The Artist and Song data chunks now
