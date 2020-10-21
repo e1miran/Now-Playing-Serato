@@ -1,7 +1,7 @@
 # __Now Playing__ in Serato ![Menu Bar Image](https://github.com/e1miran/Now-Playing-Serato/blob/master/git-images/seratoPlaying.png?raw=true) 
 __Now Playing__ is a tool written in Python to retrieve the current/last played song in Serato DJ.  
 
-Starting with the current version, __Now Playing__ retrieves the current track from Serato's local history log and writes it to a plain text file which can be fed to streaming services and apps like OBS Studio. 
+Starting with the version 1.3.0, __Now Playing__ retrieves the current track from Serato's local history log and writes it to a plain text file which can be fed to streaming services and apps like OBS Studio. 
 
 Previous versions of __Now Playing__ could only use a remote method of retrieving song data by leveraging the Serato Live Playlists functionality and scraping the data from the user's Live page on the Serato website. This legacy method remains an option for when the user requires streaming from a PC that is not the same on which Serato is running. 
 
