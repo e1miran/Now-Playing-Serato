@@ -21,13 +21,12 @@ It runs on the latest versions of Windows and macOS (High Sierra and newer).
 * Changed polling method for increased efficiency.
 * Other enhancements due to new code and functionality.
 
-## Considerations
+## Considerations and Pre-requisites
 __Now Playing__ was developed and tested in an environment using a Serato DJ compatible controller.  While it can be used with Serato DJ in DVS mode, this has not been tested. Therefore, behavior regarding the timing of song updates is not known. If song updates occur too quickly with DVS, try the Remote mode.
 
-## Pre-requisites
 __Only applies when using the Remote Mode to retrieve track data:__
-* Active internet connection 
-* Serato account with Live Playlists enabled
+* Active internet connection is required
+* Serato account required with Live Playlists enabled
 
 For more info on Serato Live Playlists: https://support.serato.com/hc/en-us/articles/228019568-Live-Playlists
   
