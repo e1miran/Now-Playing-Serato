@@ -5,8 +5,15 @@ Starting with the current version, __Now Playing__ retrieves the current track f
 
 Previous versions of __Now Playing__ could only use a remote method of retrieving song data by leveraging the Serato Live Playlists functionality and scraping the data from the user's Live page on the Serato website. This legacy method remains an option for when the user requires streaming from a PC that is not the same on which Serato is running. 
 
-It runs on the latest versions of Windows and macOS (Mojave and newer). 
+It runs on the latest versions of Windows and macOS (High Sierra and newer). 
 [*__IMPORTANT__ note for macOS users*](#important-note-for-macos-users)
+
+### New in version 1.4.0
+* Fix for issue where Settings UI window did not fit on smaller resolution screens.
+    The window is now re-sizeable and scrolling is enabled.
+* Augmented the suffix and prefix functionality. The Artist and Song data chunks now
+    can have independent suffixes and prefixes.
+* Added version number to Settings window title bar.
 
 #### New in version 1.3.0
 * Added ability to read latest track info from Serato library history log. User now can choose  between local or remote (Serato Live Playlists) polling methods.
@@ -32,7 +39,7 @@ At the moment the app is only supported for macOS Mojave and newer.
 * Create a new, blank text file with the TextEdit app or similar text editor. Name it as you please, and save this text file anywhere you like on your mac and close the text editor.
 
 #### *Important note for macOS users*
-Due to security measures in macOS Sierra and later, apps downloaded from outside of the Mac App Store that are unsigned may have limitations placed on them that will prevent them from operating correctly, or even opening at all. The app has been verified to open on Mojave and newer versions of macOS by following the steps below. Versions prior to Mojave have not been verified and are not currently supported.
+Due to security measures in macOS Sierra and later, apps downloaded from outside of the Mac App Store that are unsigned may have limitations placed on them that will prevent them from operating correctly, or even opening at all. The app has been verified to open on High Sierra and newer versions of macOS by following the steps below. Versions prior to High Sierra have not been verified and are not currently supported.
 
 * Do not unzip the downloaded zip package directly to the folder from where you will be running it. Instead unzip it in a location such as the "Downloads" folder and then move the 'SeratoNowPlaying.app' to your destination folder (e.g., "Applications"). Then run the app from the destination folder.
 * If after following the step above the app does not open, or you tried running it before moving the app, open Terminal and type: ```sudo xattr -r -d com.apple.quarantine /path/to/MyApp.app``` (replace with the correct path to the app).
@@ -79,10 +86,10 @@ Upon initial execution of the app, a settings window will appear. Subsequently, 
 
 * __Song Quote Indicator__ - Selecting this option will surround the song title with quotes.
 
-* __Prefix__ - Allows to specify characters to be written before the track info. 
+* __Prefixes__ - Allows to specify characters to be written before the artist and/or song info. 
     * e.g., "Now Playing: "
 
-* __Suffix__ - Allows to specify characters to be written after the track info.
+* __Suffixes__ - Allows to specify characters to be written after the artist and/or song info.
 
 * __Notification Indicator__ - Selecting this option will show a system notification when new track info is detected.
     * This is useful for verifying that the app is actually polling and retrieving data.
