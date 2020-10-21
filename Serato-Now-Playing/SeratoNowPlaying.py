@@ -2,16 +2,16 @@
 
 
 __author__ = "Ely Miranda"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __license__ = "MIT"
 
 '''
 CHANGELOG:
-* Added ability to read latest track info from Serato library history log
-    user now can choose local or remote (Serato Live Playlists) polling
-* Fix for issue where app would not launch on Windows due to not being able to create config.ini
-* Changed polling method for increased efficiency
-* Code enhancements due to new functionality.
+* Fix for issue where Settings UI window did not fit on smaller resolution screens.
+    The window is now re-sizeable and scrolling is enabled.
+* Augmented the suffix and prefix functionality. The Artist and Song data chunks now
+    can have independent suffixes and prefixes.
+* Added version number to Settings window title bar.
 '''
 
 import requests
@@ -20,7 +20,7 @@ from threading import Thread
 from polling2 import poll
 from lxml import html
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction, QLabel, QRadioButton, \
+from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction, QLabel, QRadioButton, QScrollArea, \
     QVBoxLayout, QHBoxLayout, QCheckBox, QPushButton, QLineEdit, QFileDialog, QWidget, QFrame
 from PyQt5.QtGui import QIcon, QFont
 from time import sleep, time
@@ -64,8 +64,10 @@ class ConfigFile:  # read and write to config.ini
             self.delay = config.get('Settings', 'delay')
             self.multi = is_bool(config.get('Settings', 'multi'))
             self.quote = is_bool(config.get('Settings', 'quote'))
-            self.pref = config.get('Settings', 'pref').replace("|_0", " ")
-            self.suff = config.get('Settings', 'suff').replace("|_0", " ")
+            self.a_pref = config.get('Settings', 'a_pref').replace("|_0", " ")
+            self.a_suff = config.get('Settings', 'a_suff').replace("|_0", " ")
+            self.s_pref = config.get('Settings', 's_pref').replace("|_0", " ")
+            self.s_suff = config.get('Settings', 's_suff').replace("|_0", " ")
             self.notif = is_bool(config.get('Settings', 'notif'))
 
             if is_number(self.interval) is False:
@@ -78,7 +80,7 @@ class ConfigFile:  # read and write to config.ini
         except configparser.NoOptionError:
             pass
 
-    def put(self, local, libpath, url, file, interval, delay, multi, quote, pref, suff, notif):
+    def put(self, local, libpath, url, file, interval, delay, multi, quote, a_pref, a_suff, s_pref, s_suff, notif):
         self.cparser.set('Settings', 'local', local)
         self.cparser.set('Settings', 'libpath', libpath)
         self.cparser.set('Settings', 'url', url)
@@ -87,8 +89,10 @@ class ConfigFile:  # read and write to config.ini
         self.cparser.set('Settings', 'delay', delay)
         self.cparser.set('Settings', 'multi', str(multi))
         self.cparser.set('Settings', 'quote', str(quote))
-        self.cparser.set('Settings', 'pref', pref)
-        self.cparser.set('Settings', 'suff', suff)
+        self.cparser.set('Settings', 'a_pref', a_pref)
+        self.cparser.set('Settings', 'a_suff', a_suff)
+        self.cparser.set('Settings', 's_pref', s_pref)
+        self.cparser.set('Settings', 's_suff', s_suff)
         self.cparser.set('Settings', 'notif', str(notif))
 
         cf = open(self.cfile, 'w')
@@ -102,14 +106,10 @@ class SettingsUI:  # create settings form window
         self.conf = conf
         self.conffile = conffile
         self.icon = icn
+        self.scroll = QScrollArea()
         self.window = QWidget()
         self.separator = QFrame()
-        self.window.setWindowFlag(Qt.CustomizeWindowHint, True)
-        self.window.setWindowFlag(Qt.WindowCloseButtonHint, False)
-        self.window.setWindowFlag(Qt.WindowMinMaxButtonsHint, False)
-        self.window.setWindowFlag(Qt.WindowMinimizeButtonHint, False)
-        self.window.setWindowTitle('Now Playing - Settings')
-        self.window.setWindowIcon(QIcon(icn))
+        self.scroll.setWindowIcon(QIcon(icn))
         self.layoutV = QVBoxLayout()
         self.layoutH0 = QHBoxLayout()
         self.layoutH0a = QHBoxLayout()
@@ -118,8 +118,22 @@ class SettingsUI:  # create settings form window
         self.layoutH3 = QHBoxLayout()
         self.layoutH4 = QHBoxLayout()
         self.layoutH5 = QHBoxLayout()
+        self.layoutH6a = QHBoxLayout()
+        self.layoutH6b = QHBoxLayout()
+        self.layoutH6c = QHBoxLayout()
+        self.layoutH6d = QHBoxLayout()
         self.fBold = QFont()
         self.fBold.setBold(True)
+        self.scroll.setWindowTitle('Now Playing v1.4.0 - Settings')
+
+        self.scroll.setWidgetResizable(True)
+        self.scroll.setWindowFlag(Qt.CustomizeWindowHint, True)
+        self.scroll.setWindowFlag(Qt.WindowCloseButtonHint, False)
+        # self.scroll.setWindowFlag(Qt.WindowMinMaxButtonsHint, False)
+        self.scroll.setWindowFlag(Qt.WindowMinimizeButtonHint, False)
+        self.scroll.setWidget(self.window)
+        self.scroll.setMinimumWidth(625)
+        self.scroll.resize(625, 825)
 
         # error section
         self.errLabel = QLabel()
@@ -136,7 +150,7 @@ class SettingsUI:  # create settings form window
         self.localRadio = QRadioButton('Local')
         self.localRadio.setChecked(True)
         self.localRadio.toggled.connect(lambda: self.on_radiobutton_select(self.localRadio))
-        self.localRadio.setMaximumSize(55, 35)
+        self.localRadio.setMaximumWidth(60)
 
         self.remoteRadio = QRadioButton('Remote')
         self.remoteRadio.toggled.connect(lambda: self.on_radiobutton_select(self.remoteRadio))
@@ -176,7 +190,7 @@ class SettingsUI:  # create settings form window
         # file
         self.fileLabel = QLabel('File')
         self.fileLabel.setFont(self.fBold)
-        self.fileDesc = QLabel('The file to which current track info is written.')
+        self.fileDesc = QLabel('The file to which current track info is written. (Must be plain text: .txt)')
         self.fileDesc.setStyleSheet('color: grey')
         self.layoutV.addWidget(self.fileLabel)
         self.layoutV.addWidget(self.fileDesc)
@@ -190,7 +204,7 @@ class SettingsUI:  # create settings form window
         self.intervalLabel = QLabel('Polling Interval')
         self.intervalLabel.setFont(self.fBold)
         self.intervalDesc = QLabel('Amount of time, in seconds, \
-that must elapse before checking for new track info.\n(Default = 10.0)')
+that must elapse before checking for new track info. (Default = 10.0)')
         self.intervalDesc.setStyleSheet('color: grey')
         self.layoutV.addWidget(self.intervalLabel)
         self.layoutV.addWidget(self.intervalDesc)
@@ -204,19 +218,19 @@ that must elapse before checking for new track info.\n(Default = 10.0)')
         self.delayLabel = QLabel('Write Delay')
         self.delayLabel.setFont(self.fBold)
         self.delayDesc = QLabel('Amount of time, in seconds, \
-to delay writing the new track info once it\'s retrieved.\n(Default = 0)')
+to delay writing the new track info once it\'s retrieved. (Default = 0)')
         self.delayDesc.setStyleSheet('color: grey')
         self.layoutV.addWidget(self.delayLabel)
         self.layoutV.addWidget(self.delayDesc)
         self.delayEdit = QLineEdit()
-        self.delayEdit.setMaximumSize(40, 35)
+        self.delayEdit.setMaximumWidth(40)
         self.layoutV.addWidget(self.delayEdit)
         # multi-line
         self.multiLabel = QLabel('Multiple Line Indicator')
         self.multiLabel.setFont(self.fBold)
         self.layoutV.addWidget(self.multiLabel)
         self.multiCbox = QCheckBox()
-        self.multiCbox.setMaximumSize(30, 35)
+        self.multiCbox.setMaximumWidth(25)
         self.layoutH2.addWidget(self.multiCbox)
         self.multiDesc = QLabel('Write Artist and Song \
 data on separate lines.')
@@ -228,37 +242,51 @@ data on separate lines.')
         self.quoteLabel.setFont(self.fBold)
         self.layoutV.addWidget(self.quoteLabel)
         self.quoteCbox = QCheckBox()
-        self.quoteCbox.setMaximumSize(30, 35)
+        self.quoteCbox.setMaximumWidth(25)
         self.layoutH3.addWidget(self.quoteCbox)
         self.quoteDesc = QLabel('Surround the song title \
 with quotes.')
         self.quoteDesc.setStyleSheet('color: grey')
         self.layoutH3.addWidget(self.quoteDesc)
         self.layoutV.addLayout(self.layoutH3)
-        # prefix
-        self.prefixLabel = QLabel('Prefix')
+        # prefixes
+        self.prefixLabel = QLabel('Prefixes')
         self.prefixLabel.setFont(self.fBold)
-        self.prefixDesc = QLabel('Characters to be written before track info.')
-        self.prefixDesc.setStyleSheet('color: grey')
         self.layoutV.addWidget(self.prefixLabel)
-        self.layoutV.addWidget(self.prefixDesc)
-        self.prefixEdit = QLineEdit()
-        self.layoutV.addWidget(self.prefixEdit)
-        # suffix
-        self.suffixLabel = QLabel('Suffix')
+        self.a_prefixDesc = QLabel('Artist - String to be written before artist info.')
+        self.a_prefixDesc.setStyleSheet('color: grey')
+        self.s_prefixDesc = QLabel('Song - String to be written before song info.')
+        self.s_prefixDesc.setStyleSheet('color: grey')
+        self.layoutH6a.addWidget(self.a_prefixDesc)
+        self.layoutH6a.addWidget(self.s_prefixDesc)
+        self.a_prefixEdit = QLineEdit()
+        self.s_prefixEdit = QLineEdit()
+        self.layoutH6b.addWidget(self.a_prefixEdit)
+        self.layoutH6b.addWidget(self.s_prefixEdit)
+        self.layoutV.addLayout(self.layoutH6a)
+        self.layoutV.addLayout(self.layoutH6b)
+        # suffixes
+        self.suffixLabel = QLabel('Suffixes')
         self.suffixLabel.setFont(self.fBold)
-        self.suffixDesc = QLabel('Characters to be written after track info.')
-        self.suffixDesc.setStyleSheet('color: grey')
         self.layoutV.addWidget(self.suffixLabel)
-        self.layoutV.addWidget(self.suffixDesc)
-        self.suffixEdit = QLineEdit()
-        self.layoutV.addWidget(self.suffixEdit)
+        self.a_suffixDesc = QLabel('Artist - String to be written after artist info.')
+        self.a_suffixDesc.setStyleSheet('color: grey')
+        self.s_suffixDesc = QLabel('Song - String to be written after song info.')
+        self.s_suffixDesc.setStyleSheet('color: grey')
+        self.layoutH6c.addWidget(self.a_suffixDesc)
+        self.layoutH6c.addWidget(self.s_suffixDesc)
+        self.a_suffixEdit = QLineEdit()
+        self.s_suffixEdit = QLineEdit()
+        self.layoutH6d.addWidget(self.a_suffixEdit)
+        self.layoutH6d.addWidget(self.s_suffixEdit)
+        self.layoutV.addLayout(self.layoutH6c)
+        self.layoutV.addLayout(self.layoutH6d)
         # notify
         self.notifLabel = QLabel('Notification Indicator')
         self.notifLabel.setFont(self.fBold)
         self.layoutV.addWidget(self.notifLabel)
         self.notifCbox = QCheckBox()
-        self.notifCbox.setMaximumSize(30, 35)
+        self.notifCbox.setMaximumWidth(25)
         self.layoutH5.addWidget(self.notifCbox)
         self.notifDesc = QLabel('Show OS system notification \
 when new song is retrieved.')
@@ -296,8 +324,10 @@ when new song is retrieved.')
         self.delayEdit.setText(str(c.delay))
         self.multiCbox.setChecked(c.multi)
         self.quoteCbox.setChecked(c.quote)
-        self.prefixEdit.setText(c.pref)
-        self.suffixEdit.setText(c.suff)
+        self.a_prefixEdit.setText(c.a_pref)
+        self.a_suffixEdit.setText(c.a_suff)
+        self.s_prefixEdit.setText(c.s_pref)
+        self.s_suffixEdit.setText(c.s_suff)
         self.notifCbox.setChecked(c.notif)
 
     def upd_conf(self):
@@ -310,12 +340,14 @@ when new song is retrieved.')
         delay = self.delayEdit.text()
         multi = str(self.multiCbox.isChecked())
         quote = str(self.quoteCbox.isChecked())
-        pref = self.prefixEdit.text().replace(" ", "|_0")
-        suff = self.suffixEdit.text().replace(" ", "|_0")
+        a_pref = self.a_prefixEdit.text().replace(" ", "|_0")
+        a_suff = self.a_suffixEdit.text().replace(" ", "|_0")
+        s_pref = self.s_prefixEdit.text().replace(" ", "|_0")
+        s_suff = self.s_suffixEdit.text().replace(" ", "|_0")
         notif = str(self.notifCbox.isChecked())
 
         c = ConfigFile(self.conf, self.conffile)
-        c.put(local, libpath, url, file, interval, delay, multi, quote, pref, suff, notif)
+        c.put(local, libpath, url, file, interval, delay, multi, quote, a_pref, a_suff, s_pref, s_suff, notif)
 
     # radio button action
     def on_radiobutton_select(self, b):
@@ -405,19 +437,19 @@ when new song is retrieved.')
     def show(self):
         tray.actConfig.setEnabled(False)
         self.upd_win()
-        self.window.show()
-        self.window.setFocus()
+        self.scroll.show()
+        self.scroll.setFocus()
 
     def close(self):
         tray.actConfig.setEnabled(True)
-        self.window.hide()
+        self.scroll.hide()
 
     def exit(self):
-        self.window.close()
+        self.scroll.close()
 
 
 class Tray:  # create tray icon menu
-    def __init__(self,):
+    def __init__(self, ):
         # create systemtray UI
         self.icon = QIcon(ico)
         self.tray = QSystemTrayIcon()
@@ -427,7 +459,7 @@ class Tray:  # create tray icon menu
         self.menu = QMenu()
 
         # create systemtray options and actions
-        self.actTitle = QAction("Now Playing v1.3")
+        self.actTitle = QAction("Now Playing v1.4")
         self.menu.addAction(self.actTitle)
         self.actTitle.setEnabled(False)
 
@@ -505,7 +537,6 @@ def init():  # initiate main processes
 
 def main():  # track polling process
     global track
-    # while True:
     conf = ConfigFile(config, config_file)
 
     # get poll interval and then poll
@@ -518,11 +549,12 @@ def main():  # track polling process
     # display new track info in system notification
     track = new
     if conf.notif == 1:
-        tip = new.replace("\n", " - ").replace("\"", "")
+        tip = new.replace("\n", " - ").replace("\"", "").replace(conf.a_pref, "").replace(conf.a_suff, "") \
+            .replace(conf.s_pref, "").replace(conf.s_suff, "")
         tray.tray.showMessage('Now Playing ▶ ', tip, 0)
 
     # write new track info to file
-    tinfo = conf.pref + new + conf.suff
+    tinfo = new  # conf.pref + new + conf.suff
     if 'No Song Data' in tinfo:
         tinfo = ''
     sleep(conf.delay)
@@ -569,21 +601,21 @@ def gettrack(c, t):  # get last played track
         return False
 
     t = tdat.split(" - ", 1)
-    artist = t[0]
-    song = t[1]
 
-    if artist == '.':
+    if t[0] == '.':
         artist = ''
+    else:
+        artist = c.a_pref + t[0] + c.a_suff
 
-    if song == '.':
+    if t[1] == '.':
         song = ''
+    elif conf.quote == 1:  # handle quotes
+        song = c.s_pref + "\"" + t[1] + "\"" + c.s_suff
+    else:
+        song = c.s_pref + t[1] + c.s_suff
 
     if artist == '' and song == '':
         return 'No Song Data'
-
-    # handle quotes
-    if conf.quote == 1:
-        song = "\"" + song + "\""
 
     # handle multiline
     if conf.multi == 1:
@@ -616,7 +648,7 @@ def getsessfile(directory, showlast=True):
     else:
         file = os.path.abspath(os.path.join(directory, first))
 
-    file_mod_age = time()-os.path.getmtime(file)
+    file_mod_age = time() - os.path.getmtime(file)
 
     if file_mod_age > 10:  # 2592000:
         return False
@@ -660,7 +692,6 @@ def getlasttrack(s):  # function to parse out last track from binary session fil
             sy = byt.find('\x00\x00\x00\x00\x0f')
 
     # parse artist
-
     ax = byt.find('\x00\x00\x00\x00\x07')  # field start
 
     if ax > 0:
