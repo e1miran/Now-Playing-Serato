@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
 
-
-__author__ = "Ely Miranda"
-__version__ = "1.4.0"
-__license__ = "MIT"
-
 '''
 CHANGELOG:
 * Fix for issue where Settings UI window did not fit on smaller resolution screens.
@@ -14,18 +9,26 @@ CHANGELOG:
 * Added version number to Settings window title bar.
 '''
 
-import requests
 import configparser
+import os
+import sys
 from threading import Thread
+from time import sleep, time
+
+import requests
+
 from polling2 import poll
 from lxml import html
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction, QLabel, QRadioButton, QScrollArea, \
-    QVBoxLayout, QHBoxLayout, QCheckBox, QPushButton, QLineEdit, QFileDialog, QWidget, QFrame
+from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction, QLabel, \
+                            QRadioButton, QScrollArea, QVBoxLayout, QHBoxLayout, \
+                            QCheckBox, QPushButton, QLineEdit, QFileDialog, QWidget, QFrame
 from PyQt5.QtGui import QIcon, QFont
-from time import sleep, time
-import os
-import sys
+
+
+__author__ = "Ely Miranda"
+__version__ = "1.4.0"
+__license__ = "MIT"
 
 # define global variables
 ini = paused = 0
@@ -37,8 +40,10 @@ if getattr(sys, 'frozen', False) and sys.platform == "darwin":
     config_file = os.path.abspath(os.path.join(bundle_dir, "bin/config.ini"))
     ico = os.path.abspath(os.path.join(bundle_dir, "bin/icon.ico"))
 else:
-    config_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "bin/config.ini"))
-    ico = os.path.abspath(os.path.join(os.path.dirname(__file__), "bin/icon.ico"))
+    config_file = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "bin/config.ini"))
+    ico = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "bin/icon.ico"))
 
 # print(config_file)
 # create needed object instances
@@ -47,7 +52,8 @@ app = QApplication([])
 app.setQuitOnLastWindowClosed(False)
 
 
-class ConfigFile:  # read and write to config.ini
+class ConfigFile:
+    ''' read and write to config.ini '''
     def __init__(self, cparser, cfile):
         self.cparser = cparser
         self.cfile = cfile
@@ -80,7 +86,8 @@ class ConfigFile:  # read and write to config.ini
         except configparser.NoOptionError:
             pass
 
-    def put(self, local, libpath, url, file, interval, delay, multi, quote, a_pref, a_suff, s_pref, s_suff, notif):
+    def put(self, local, libpath, url, file, interval, delay, multi, quote,
+            a_pref, a_suff, s_pref, s_suff, notif):
         self.cparser.set('Settings', 'local', local)
         self.cparser.set('Settings', 'libpath', libpath)
         self.cparser.set('Settings', 'url', url)
@@ -101,7 +108,8 @@ class ConfigFile:  # read and write to config.ini
 
 
 # settings UI
-class SettingsUI:  # create settings form window
+class SettingsUI:
+    ''' create settings form window '''
     def __init__(self, conf, conffile, icn):
         self.conf = conf
         self.conffile = conffile
@@ -142,18 +150,21 @@ class SettingsUI:  # create settings form window
         self.localLabel = QLabel('Track Retrieval Mode')
         self.localLabel.setFont(self.fBold)
         self.layoutV.addWidget(self.localLabel)
-        self.remoteDesc = QLabel('Local mode (default) uses Serato\'s local history log for track data.\
+        self.remoteDesc = QLabel(
+            'Local mode (default) uses Serato\'s local history log for track data.\
 \nRemote mode retrieves remote track data from Serato Live Playlists.')
         self.remoteDesc.setStyleSheet('color: grey')
         self.layoutV.addWidget(self.remoteDesc)
         # radios
         self.localRadio = QRadioButton('Local')
         self.localRadio.setChecked(True)
-        self.localRadio.toggled.connect(lambda: self.on_radiobutton_select(self.localRadio))
+        self.localRadio.toggled.connect(
+            lambda: self.on_radiobutton_select(self.localRadio))
         self.localRadio.setMaximumWidth(60)
 
         self.remoteRadio = QRadioButton('Remote')
-        self.remoteRadio.toggled.connect(lambda: self.on_radiobutton_select(self.remoteRadio))
+        self.remoteRadio.toggled.connect(
+            lambda: self.on_radiobutton_select(self.remoteRadio))
         self.layoutH0.addWidget(self.localRadio)
         self.layoutH0.addWidget(self.remoteRadio)
         self.layoutV.addLayout(self.layoutH0)
@@ -161,7 +172,9 @@ class SettingsUI:  # create settings form window
         # library path
         self.libLabel = QLabel('Serato Library Path')
         self.libLabel.setFont(self.fBold)
-        self.libDesc = QLabel('Location of Serato library folder.\ni.e., \\THE_PATH_TO\\_Serato_')
+        self.libDesc = QLabel(
+            'Location of Serato library folder.\ni.e., \\THE_PATH_TO\\_Serato_'
+        )
         self.libDesc.setStyleSheet('color: grey')
         self.layoutV.addWidget(self.libLabel)
         self.layoutV.addWidget(self.libDesc)
@@ -174,7 +187,9 @@ class SettingsUI:  # create settings form window
         # url
         self.urlLabel = QLabel('URL')
         self.urlLabel.setFont(self.fBold)
-        self.urlDesc = QLabel('Web address of your Serato Playlist.\ne.g., https://serato.com/playlists/USERNAME/live')
+        self.urlDesc = QLabel(
+            'Web address of your Serato Playlist.\ne.g., https://serato.com/playlists/USERNAME/live'
+        )
         self.urlDesc.setStyleSheet('color: grey')
         self.layoutV.addWidget(self.urlLabel)
         self.urlEdit = QLineEdit()
@@ -190,7 +205,9 @@ class SettingsUI:  # create settings form window
         # file
         self.fileLabel = QLabel('File')
         self.fileLabel.setFont(self.fBold)
-        self.fileDesc = QLabel('The file to which current track info is written. (Must be plain text: .txt)')
+        self.fileDesc = QLabel(
+            'The file to which current track info is written. (Must be plain text: .txt)'
+        )
         self.fileDesc.setStyleSheet('color: grey')
         self.layoutV.addWidget(self.fileLabel)
         self.layoutV.addWidget(self.fileDesc)
@@ -253,9 +270,11 @@ with quotes.')
         self.prefixLabel = QLabel('Prefixes')
         self.prefixLabel.setFont(self.fBold)
         self.layoutV.addWidget(self.prefixLabel)
-        self.a_prefixDesc = QLabel('Artist - String to be written before artist info.')
+        self.a_prefixDesc = QLabel(
+            'Artist - String to be written before artist info.')
         self.a_prefixDesc.setStyleSheet('color: grey')
-        self.s_prefixDesc = QLabel('Song - String to be written before song info.')
+        self.s_prefixDesc = QLabel(
+            'Song - String to be written before song info.')
         self.s_prefixDesc.setStyleSheet('color: grey')
         self.layoutH6a.addWidget(self.a_prefixDesc)
         self.layoutH6a.addWidget(self.s_prefixDesc)
@@ -269,9 +288,11 @@ with quotes.')
         self.suffixLabel = QLabel('Suffixes')
         self.suffixLabel.setFont(self.fBold)
         self.layoutV.addWidget(self.suffixLabel)
-        self.a_suffixDesc = QLabel('Artist - String to be written after artist info.')
+        self.a_suffixDesc = QLabel(
+            'Artist - String to be written after artist info.')
         self.a_suffixDesc.setStyleSheet('color: grey')
-        self.s_suffixDesc = QLabel('Song - String to be written after song info.')
+        self.s_suffixDesc = QLabel(
+            'Song - String to be written after song info.')
         self.s_suffixDesc.setStyleSheet('color: grey')
         self.layoutH6c.addWidget(self.a_suffixDesc)
         self.layoutH6c.addWidget(self.s_suffixDesc)
@@ -347,10 +368,11 @@ when new song is retrieved.')
         notif = str(self.notifCbox.isChecked())
 
         c = ConfigFile(self.conf, self.conffile)
-        c.put(local, libpath, url, file, interval, delay, multi, quote, a_pref, a_suff, s_pref, s_suff, notif)
+        c.put(local, libpath, url, file, interval, delay, multi, quote, a_pref,
+              a_suff, s_pref, s_suff, notif)
 
-    # radio button action
     def on_radiobutton_select(self, b):
+        ''' radio button action '''
         if b.text() == 'Local':
             self.urlLabel.setHidden(True)
             self.urlEdit.setHidden(True)
@@ -380,27 +402,29 @@ when new song is retrieved.')
             self.errLabel.setText('')
             self.window.show()
 
-    # file button action
     def on_filebutton_clicked(self):
-        filename = QFileDialog.getOpenFileName(self.window, 'Open file', '.', '*.txt')
+        ''' file button clicked action '''
+        filename = QFileDialog.getOpenFileName(self.window, 'Open file', '.',
+                                               '*.txt')
         if filename:
             self.fileEdit.setText(filename[0])
 
-    # file button action
     def on_libbutton_clicked(self):
-        libdir = QFileDialog.getExistingDirectory(self.window, 'Select directory')
+        ''' lib button clicked action'''
+        libdir = QFileDialog.getExistingDirectory(self.window,
+                                                  'Select directory')
         if libdir:
             self.libEdit.setText(libdir)
 
-    # cancel button action
     def on_cancelbutton_clicked(self):
+        ''' cancel button clicked action '''
         tray.actConfig.setEnabled(True)
         self.upd_win()
         self.close()
         self.errLabel.setText('')
 
-    # save button action
     def on_savebutton_clicked(self):
+        ''' save button clicked action '''
         if self.remoteRadio.isChecked():
             if 'https://serato.com/playlists' not in self.urlEdit.text() and \
                     'https://www.serato.com/playlists' not in self.urlEdit.text() or \
@@ -412,7 +436,9 @@ when new song is retrieved.')
 
         if self.localRadio.isChecked():
             if '_Serato_' not in self.libEdit.text():
-                self.errLabel.setText('* Serato Library Path is required.  Should point to "_Serato_" folder')
+                self.errLabel.setText(
+                    '* Serato Library Path is required.  Should point to "_Serato_" folder'
+                )
                 self.window.hide()
                 self.window.show()
                 return
@@ -450,7 +476,7 @@ when new song is retrieved.')
 
 class Tray:  # create tray icon menu
     def __init__(self, ):
-        # create systemtray UI
+        ''' create systemtray UI '''
         self.icon = QIcon(ico)
         self.tray = QSystemTrayIcon()
         self.tray.setIcon(self.icon)
@@ -480,19 +506,24 @@ class Tray:  # create tray icon menu
         # add menu to the systemtray UI
         self.tray.setContextMenu(self.menu)
 
-    def unpause(self):  # unpause polling
+    def unpause(self):
+        ''' unpause polling '''
+
         global paused
         paused = 0
         self.actPause.setText('Pause')
         self.actPause.triggered.connect(self.pause)
 
-    def pause(self):  # pause polling
+    def pause(self):
+        ''' pause polling '''
+
         global paused
         paused = 1
         self.actPause.setText('Resume')
         self.actPause.triggered.connect(self.unpause)
 
-    def cleanquit(self):  # quit app and cleanup
+    def cleanquit(self):
+        ''' quit app and cleanup '''
         self.tray.setVisible(False)
         file = ConfigFile(config, config_file).file
         if file:
@@ -508,7 +539,8 @@ tray = Tray()
 
 
 # FUNCTIONS ####
-def is_number(s):  # test for number type
+def is_number(s):
+    ''' test for number type '''
     try:
         float(s)
         return True
@@ -516,14 +548,15 @@ def is_number(s):  # test for number type
         return False
 
 
-def is_bool(s):  # test for bool type
+def is_bool(s):
+    ''' test for bool type '''
     if s == "False":
         return 0
-    else:
-        return 1
+    return 1
 
 
-def init():  # initiate main processes
+def init():
+    ''' initiate main processes '''
     conf = ConfigFile(config, config_file)
     if conf.file == '':
         win.show()
@@ -535,7 +568,8 @@ def init():  # initiate main processes
         main_thread.start()
 
 
-def main():  # track polling process
+def main():
+    ''' track polling process '''
     global track
     conf = ConfigFile(config, config_file)
 
@@ -544,13 +578,18 @@ def main():  # track polling process
         interval = 1
     else:
         interval = conf.interval
-    new = poll(lambda: gettrack(ConfigFile(config, config_file), track), step=interval, poll_forever=True)
+    new = poll(lambda: gettrack(ConfigFile(config, config_file), track),
+               step=interval,
+               poll_forever=True)
 
     # display new track info in system notification
     track = new
     if conf.notif == 1:
-        tip = new.replace("\n", " - ").replace("\"", "").replace(conf.a_pref, "").replace(conf.a_suff, "") \
-            .replace(conf.s_pref, "").replace(conf.s_suff, "")
+        tip = new.replace("\n", " - ")\
+                 .replace("\"", "")\
+                 .replace(conf.a_pref, "")\
+                 .replace(conf.a_suff, "") \
+                 .replace(conf.s_pref, "").replace(conf.s_suff, "")
         tray.tray.showMessage('Now Playing ▶ ', tip, 0)
 
     # write new track info to file
@@ -567,7 +606,8 @@ def main():  # track polling process
 main_thread = Thread(target=main, daemon=True)
 
 
-def gettrack(c, t):  # get last played track
+def gettrack(c, t):
+    ''' get last played track '''
     global paused
     conf = c
     tk = t
@@ -588,13 +628,18 @@ def gettrack(c, t):  # get last played track
         # get and parse playlist source code
         page = requests.get(conf.url)
         tree = html.fromstring(page.text)
-        item = tree.xpath('(//div[@class="playlist-trackname"]/text())[last()]')
+        item = tree.xpath(
+            '(//div[@class="playlist-trackname"]/text())[last()]')
         tdat = item
 
     # cleanup
     tdat = str(tdat)
-    tdat = tdat.replace("['", "").replace("']", "").replace("[]", "").replace("\\n", "").replace("\\t", "") \
-        .replace("[\"", "").replace("\"]", "")
+    tdat = tdat.replace("['", "")\
+               .replace("']", "")\
+               .replace("[]", "")\
+               .replace("\\n", "")\
+               .replace("\\t", "")\
+               .replace("[\"", "").replace("\"]", "")
     tdat = tdat.strip()
 
     if tdat == "":
@@ -627,8 +672,8 @@ def gettrack(c, t):  # get last played track
 
     if tdat != tk:
         return tdat
-    else:
-        return False
+
+    return False
 
 
 def getsessfile(directory, showlast=True):
@@ -652,13 +697,15 @@ def getsessfile(directory, showlast=True):
 
     if file_mod_age > 10:  # 2592000:
         return False
-    else:
-        sleep(0.5)
-        return file
+
+    sleep(0.5)
+    return file
 
 
-def getlasttrack(s):  # function to parse out last track from binary session file
-    # get latest session file
+def getlasttrack(s):
+    ''' parse out last track from binary session file
+        get latest session file
+    '''
     sess = getsessfile(s)
     if sess is False:
         return False
@@ -715,20 +762,18 @@ def getlasttrack(s):  # function to parse out last track from binary session fil
         str_song = '.'
 
     t_info = str(str_artist).strip() + " - " + str(str_song).strip()
-    t_info = t_info
 
     return t_info
 
 
-def writetrack(f, t=""):  # write new track info
-    file = f
-    with open(file, "w", encoding='utf-8') as f:
+def writetrack(f, t=""):
+    ''' write new track info '''
+    with open(f, "w", encoding='utf-8') as fh:
         print("writing...")
-        f.write(t)
+        fh.write(t)
 
 
 # END FUNCTIONS ####
-
 
 if __name__ == "__main__":
     init()
