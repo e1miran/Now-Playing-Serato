@@ -3,7 +3,7 @@
 block_cipher = None
 
 
-a = Analysis(['SeratoNowPlaying.py'],
+a = Analysis(['serato_now_playing.py'],
              pathex=['/Users/runner/work/Now-Playing-Serato/Now-Playing-Serato'],
              binaries=[],
              datas=[('bin/icon.ico', './bin'),

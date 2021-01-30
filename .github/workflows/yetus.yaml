@@ -1,0 +1,28 @@
+---
+name: Static Linting
+
+on: [push, pull_request]  # yamllint disable-line rule:truthy
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+        with:
+          path: src
+          fetch-depth: 0
+      - name: test-patch
+        uses: apache/yetus-test-patch-action@0.13.0
+        with:
+          basedir: ./src
+          patchdir: ./out
+          githubtoken: ${{ secrets.GITHUB_TOKEN }}
+      - name: Artifact output
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: apacheyetustestpatchactionout
+          path: ${{ github.workspace }}/out
