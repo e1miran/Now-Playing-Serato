@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 '''
 CHANGELOG:
 * Fix for issue where Settings UI window did not fit on smaller resolution screens.
@@ -25,32 +24,34 @@ from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction, QLabe
                             QCheckBox, QPushButton, QLineEdit, QFileDialog, QWidget, QFrame
 from PyQt5.QtGui import QIcon, QFont
 
-
 __author__ = "Ely Miranda"
 __version__ = "1.4.0"
 __license__ = "MIT"
 
 # define global variables
-ini = paused = 0
-track = ''
+INITIALIZED = PAUSED = False
+TRACK = ''
 
 # set paths for bundled files
 if getattr(sys, 'frozen', False) and sys.platform == "darwin":
-    bundle_dir = os.path.dirname(sys.executable)  # sys._MEIPASS
-    config_file = os.path.abspath(os.path.join(bundle_dir, "bin/config.ini"))
-    ico = os.path.abspath(os.path.join(bundle_dir, "bin/icon.ico"))
+    BUNDLE_DIR = os.path.dirname(sys.executable)  # sys._MEIPASS
+    CONFIG_FILE = os.path.abspath(os.path.join(BUNDLE_DIR, "bin/config.ini"))
+    ICONFILE = os.path.abspath(os.path.join(BUNDLE_DIR, "bin/icon.ico"))
 else:
-    config_file = os.path.abspath(
+    CONFIG_FILE = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "bin/config.ini"))
-    ico = os.path.abspath(
+    ICONFILE = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "bin/icon.ico"))
 
-# print(config_file)
+# print(CONFIG_FILE)
 # create needed object instances
-config = configparser.ConfigParser()
-app = QApplication([])
-app.setQuitOnLastWindowClosed(False)
+CONFIG = configparser.ConfigParser()
+QAPP = QApplication([])
+QAPP.setQuitOnLastWindowClosed(False)
 
+TRAY = None
+WIN = None
+MAIN_THREAD = None
 
 class ConfigFile:
     ''' read and write to config.ini '''
@@ -62,29 +63,49 @@ class ConfigFile:
             self.cparser.read(self.cfile)
             self.cparser.sections()
 
-            self.local = is_bool(config.get('Settings', 'local'))
-            self.libpath = config.get('Settings', 'libpath')
-            self.url = config.get('Settings', 'url')
-            self.file = config.get('Settings', 'file')
-            self.interval = config.get('Settings', 'interval')
-            self.delay = config.get('Settings', 'delay')
-            self.multi = is_bool(config.get('Settings', 'multi'))
-            self.quote = is_bool(config.get('Settings', 'quote'))
-            self.a_pref = config.get('Settings', 'a_pref').replace("|_0", " ")
-            self.a_suff = config.get('Settings', 'a_suff').replace("|_0", " ")
-            self.s_pref = config.get('Settings', 's_pref').replace("|_0", " ")
-            self.s_suff = config.get('Settings', 's_suff').replace("|_0", " ")
-            self.notif = is_bool(config.get('Settings', 'notif'))
 
-            if is_number(self.interval) is False:
-                self.interval = 10
-            if is_number(self.delay) is False:
-                self.delay = 0
+            try:
+                self.local = CONFIG.getboolean('Settings', 'local')
+            except ValueError:
+                self.local = True
 
-            self.interval = float(self.interval)
-            self.delay = float(self.delay)
+            self.libpath = CONFIG.get('Settings', 'libpath')
+            self.url = CONFIG.get('Settings', 'url')
+            self.file = CONFIG.get('Settings', 'file')
+
+            try:
+                self.interval = CONFIG.getfloat('Settings', 'interval')
+            except ValueError:
+                self.interval = float(10)
+
+            try:
+                self.delay = CONFIG.getfloat('Settings', 'delay')
+            except ValueError:
+                self.delay = float(0)
+
+            try:
+                self.multi = CONFIG.getboolean('Settings', 'multi')
+            except ValueError:
+                self.multi = False
+
+            try:
+                self.quote = CONFIG.getboolean('Settings', 'quote')
+            except ValueError:
+                self.quote = False
+
+            self.a_pref = CONFIG.get('Settings', 'a_pref').replace("|_0", " ")
+            self.a_suff = CONFIG.get('Settings', 'a_suff').replace("|_0", " ")
+            self.s_pref = CONFIG.get('Settings', 's_pref').replace("|_0", " ")
+            self.s_suff = CONFIG.get('Settings', 's_suff').replace("|_0", " ")
+
+            try:
+                self.notif = CONFIG.getboolean('Settings', 'notif')
+            except ValueError:
+                self.notif = False
+
         except configparser.NoOptionError:
             pass
+
 
     def put(self, local, libpath, url, file, interval, delay, multi, quote,
             a_pref, a_suff, s_pref, s_suff, notif):
@@ -105,7 +126,6 @@ class ConfigFile:
         cf = open(self.cfile, 'w')
         self.cparser.write(cf)
         cf.close()
-
 
 # settings UI
 class SettingsUI:
@@ -418,7 +438,7 @@ when new song is retrieved.')
 
     def on_cancelbutton_clicked(self):
         ''' cancel button clicked action '''
-        tray.actConfig.setEnabled(True)
+        TRAY.actConfig.setEnabled(True)
         self.upd_win()
         self.close()
         self.errLabel.setText('')
@@ -453,21 +473,21 @@ when new song is retrieved.')
         self.close()
         self.errLabel.setText('')
 
-        global ini
-        if ini == 0:
-            ini = 1
-            tray.actPause.setText('Pause')
-            tray.actPause.setEnabled(True)
-            main_thread.start()
+        global INITIALIZED
+        if not INITIALIZED:
+            INITIALIZED = True
+            TRAY.actPause.setText('Pause')
+            TRAY.actPause.setEnabled(True)
+            MAIN_THREAD.start()
 
     def show(self):
-        tray.actConfig.setEnabled(False)
+        TRAY.actConfig.setEnabled(False)
         self.upd_win()
         self.scroll.show()
         self.scroll.setFocus()
 
     def close(self):
-        tray.actConfig.setEnabled(True)
+        TRAY.actConfig.setEnabled(True)
         self.scroll.hide()
 
     def exit(self):
@@ -477,7 +497,7 @@ when new song is retrieved.')
 class Tray:  # create tray icon menu
     def __init__(self, ):
         ''' create systemtray UI '''
-        self.icon = QIcon(ico)
+        self.icon = QIcon(ICONFILE)
         self.tray = QSystemTrayIcon()
         self.tray.setIcon(self.icon)
         self.tray.setToolTip("Now Playing ▶")
@@ -490,7 +510,7 @@ class Tray:  # create tray icon menu
         self.actTitle.setEnabled(False)
 
         self.actConfig = QAction("Settings")
-        self.actConfig.triggered.connect(win.show)
+        self.actConfig.triggered.connect(WIN.show)
         self.menu.addAction(self.actConfig)
         self.menu.addSeparator()
 
@@ -509,111 +529,38 @@ class Tray:  # create tray icon menu
     def unpause(self):
         ''' unpause polling '''
 
-        global paused
-        paused = 0
+        global PAUSED
+        PAUSED = False
         self.actPause.setText('Pause')
         self.actPause.triggered.connect(self.pause)
 
     def pause(self):
         ''' pause polling '''
 
-        global paused
-        paused = 1
+        global PAUSED
+        PAUSED = True
         self.actPause.setText('Resume')
         self.actPause.triggered.connect(self.unpause)
 
     def cleanquit(self):
         ''' quit app and cleanup '''
         self.tray.setVisible(False)
-        file = ConfigFile(config, config_file).file
+        file = ConfigFile(CONFIG, CONFIG_FILE).file
         if file:
             writetrack(file)
         sys.exit()
 
 
-# create UI window object instance
-win = SettingsUI(config, config_file, ico)
-
-# create tray icon instance
-tray = Tray()
-
-
 # FUNCTIONS ####
-def is_number(s):
-    ''' test for number type '''
-    try:
-        float(s)
-        return True
-    except ValueError:
-        return False
-
-
-def is_bool(s):
-    ''' test for bool type '''
-    if s == "False":
-        return 0
-    return 1
-
-
-def init():
-    ''' initiate main processes '''
-    conf = ConfigFile(config, config_file)
-    if conf.file == '':
-        win.show()
-    else:
-        global ini
-        ini = 1
-        tray.actPause.setText('Pause')
-        tray.actPause.setEnabled(True)
-        main_thread.start()
-
-
-def main():
-    ''' track polling process '''
-    global track
-    conf = ConfigFile(config, config_file)
-
-    # get poll interval and then poll
-    if conf.local:
-        interval = 1
-    else:
-        interval = conf.interval
-    new = poll(lambda: gettrack(ConfigFile(config, config_file), track),
-               step=interval,
-               poll_forever=True)
-
-    # display new track info in system notification
-    track = new
-    if conf.notif == 1:
-        tip = new.replace("\n", " - ")\
-                 .replace("\"", "")\
-                 .replace(conf.a_pref, "")\
-                 .replace(conf.a_suff, "") \
-                 .replace(conf.s_pref, "").replace(conf.s_suff, "")
-        tray.tray.showMessage('Now Playing ▶ ', tip, 0)
-
-    # write new track info to file
-    tinfo = new  # conf.pref + new + conf.suff
-    if 'No Song Data' in tinfo:
-        tinfo = ''
-    sleep(conf.delay)
-    writetrack(conf.file, tinfo)
-
-    # recurse
-    main()
-
-
-main_thread = Thread(target=main, daemon=True)
-
 
 def gettrack(c, t):
     ''' get last played track '''
-    global paused
+    global PAUSED
     conf = c
     tk = t
     # check paused state
     while True:
-        if not paused:
+        if not PAUSED:
             break
     print("checking...")
     if conf.local:  # locally derived
@@ -773,8 +720,67 @@ def writetrack(f, t=""):
         fh.write(t)
 
 
+
+
+def mainthread():
+    ''' track polling process '''
+    global TRACK, TRAY
+    conf = ConfigFile(CONFIG, CONFIG_FILE)
+
+    # get poll interval and then poll
+    if conf.local:
+        interval = 1
+    else:
+        interval = conf.interval
+    new = poll(lambda: gettrack(ConfigFile(CONFIG, CONFIG_FILE), TRACK),
+               step=interval,
+               poll_forever=True)
+
+    # display new track info in system notification
+    TRACK = new
+    if conf.notif == 1:
+        tip = new.replace("\n", " - ")\
+                 .replace("\"", "")\
+                 .replace(conf.a_pref, "")\
+                 .replace(conf.a_suff, "") \
+                 .replace(conf.s_pref, "").replace(conf.s_suff, "")
+        TRAY.tray.showMessage('Now Playing ▶ ', tip, 0)
+
+    # write new track info to file
+    tinfo = new  # conf.pref + new + conf.suff
+    if 'No Song Data' in tinfo:
+        tinfo = ''
+    sleep(conf.delay)
+    writetrack(conf.file, tinfo)
+
+    # recurse
+    mainthread()
+
+def main():
+    ''' initiate and launch threads '''
+
+    global TRAY, WIN, MAIN_THREAD
+
+    MAIN_THREAD = Thread(target=mainthread, daemon=True)
+
+    # create UI window object instance
+    WIN = SettingsUI(CONFIG, CONFIG_FILE, ICONFILE)
+
+    # create tray icon instance
+    TRAY = Tray()
+    conf = ConfigFile(CONFIG, CONFIG_FILE)
+    if conf.file == '':
+        WIN.show()
+    else:
+        global INITIALIZED
+        INITIALIZED = True
+        TRAY.actPause.setText('Pause')
+        TRAY.actPause.setEnabled(True)
+        MAIN_THREAD.start()
+
+
 # END FUNCTIONS ####
 
 if __name__ == "__main__":
-    init()
-    sys.exit(app.exec_())
+    main()
+    sys.exit(QAPP.exec_())
