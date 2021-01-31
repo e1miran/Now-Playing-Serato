@@ -601,7 +601,7 @@ def gettrack(c, t):
 
     if t[1] == '.':
         song = ''
-    elif conf.quote == 1:  # handle quotes
+    elif conf.quote:  # handle quotes
         song = c.s_pref + "\"" + t[1] + "\"" + c.s_suff
     else:
         song = c.s_pref + t[1] + c.s_suff
@@ -610,7 +610,7 @@ def gettrack(c, t):
         return 'No Song Data'
 
     # handle multiline
-    if conf.multi == 1:
+    if conf.multi:
         tdat = artist + "\n" + song
     elif song == '' or artist == '':
         tdat = artist + song
@@ -738,7 +738,7 @@ def mainthread():
 
     # display new track info in system notification
     TRACK = new
-    if conf.notif == 1:
+    if conf.notif:
         tip = new.replace("\n", " - ")\
                  .replace("\"", "")\
                  .replace(conf.a_pref, "")\
