@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['SeratoNowPlaying.py'],
-             pathex=['C:\\Users\\Ely Miranda\\OneDrive\\Documents\\SeratoNowPlaying\\dev\\working'],
+             pathex=['C:\\Users\\runner\\work\\Now-Playing-Serato\\Now-Playing-Serato'],
              binaries=[],
              datas=[],
              hiddenimports=[],
@@ -30,4 +30,4 @@ exe = EXE(pyz,
           upx=True,
           upx_exclude=[],
           runtime_tmpdir=None,
-          console=False , icon='seratoPlaying.ico')
+          console=False , icon='resources\\seratoPlaying.ico')

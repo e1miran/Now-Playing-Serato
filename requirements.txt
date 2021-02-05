@@ -1,2 +1,7 @@
-PyQT5
+cryptography
+lxml
 polling2
+pyinstaller
+PyQT5
+requests
+urllib3

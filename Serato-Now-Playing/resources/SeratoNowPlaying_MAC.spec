@@ -4,9 +4,10 @@ block_cipher = None
 
 
 a = Analysis(['SeratoNowPlaying.py'],
-             pathex=['/Users/miranda/Documents/GitHub/Now-Playing-Serato/Serato-Now-Playing'],
+             pathex=['/Users/runner/work/Now-Playing-Serato/Now-Playing-Serato'],
              binaries=[],
-             datas=[('bin/icon.ico', './bin')],
+             datas=[('bin/icon.ico', './bin'),
+                    ('bin/config.ini', './bin')],
              hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],
@@ -38,7 +39,7 @@ coll = COLLECT(exe,
 app = BUNDLE(coll,
              name='SeratoNowPlaying.app',
              icon='resources/seratoPlaying.icns',
-             bundle_identifier=None, 
+             bundle_identifier=None,
              info_plist={
                 'LSUIElement': True
              })
