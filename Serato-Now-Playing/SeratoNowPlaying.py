@@ -26,6 +26,8 @@ from PyQt5.QtGui import QIcon, QFont
 from time import sleep, time
 import os
 import sys
+from eyed3.id3.tag import Tag
+import mimetypes
 
 # define global variables
 ini = paused = 0
@@ -670,10 +672,10 @@ def getlasttrack(s):  # function to parse out last track from binary session fil
     with open(sess, "rb") as f:
         raw = f.read()
 
-    # decode and split out last track of session file
-    binstr = raw.decode('latin').rsplit('oent')  # split tracks
-    byt = binstr[-1]  # last track chunk
-    # print(byt)
+    index = raw.rfind(b'\x6f\x65\x6e\x74')
+    bytr = raw[index:]  # last track chunk
+    byt = bytr.decode('latin')
+
     # determine if playing
     if (byt.find('\x00\x00\x00-') > 0 or  # ejected or is
             byt.find('\x00\x00\x00\x003') > 0):  # loaded, but not played
@@ -705,12 +707,20 @@ def getlasttrack(s):  # function to parse out last track from binary session fil
     mx = byt.find('\x00\x00\x00\x02')  # field start
 
     if mx > 0:
-        my = byt.find('\x00\x00\x00\x00\x06')  # field end
+        my = byt.find('\x00\x00\x00\x06')  # field end
 
     if mx > 0:
-        bin_mp3 = byt[mx + 4:my].replace('\x00', '')
-        str_mp3 = bin_mp3[1:]
-        print(str_mp3)
+        bin_mp3 = bytr[mx + 4:my]
+        bin_mp3 = bin_mp3[4:-2]
+        print(bin_mp3.hex())
+        str_mp3 = bin_mp3.decode('utf-16-be')
+        tag = Tag()
+        tag.parse(str_mp3)
+        if len(tag.images) > 0:
+            extension = mimetypes.guess_extension(tag.images[0].mime_type)
+            f = open('cover'+extension, 'wb')
+            f.write(tag.images[0].image_data)
+            f.close()
 
     # cleanup and return
     if ax > 0:
