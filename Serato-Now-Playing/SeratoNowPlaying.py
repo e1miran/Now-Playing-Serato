@@ -670,10 +670,10 @@ def getlasttrack(s):  # function to parse out last track from binary session fil
     with open(sess, "rb") as f:
         raw = f.read()
 
-    # decode and split out last track of session file
-    binstr = raw.decode('latin').rsplit('oent')  # split tracks
-    byt = binstr[-1]  # last track chunk
-    # print(byt)
+    index = raw.rfind(b'\x6f\x65\x6e\x74')
+    bytr = raw[index:]  # last track chunk
+    byt = bytr.decode('latin')
+
     # determine if playing
     if (byt.find('\x00\x00\x00-') > 0 or  # ejected or is
             byt.find('\x00\x00\x00\x003') > 0):  # loaded, but not played
@@ -703,14 +703,16 @@ def getlasttrack(s):  # function to parse out last track from binary session fil
 
     # cleanup and return
     if ax > 0:
-        bin_artist = byt[ax + 4:ay].replace('\x00', '')
-        str_artist = bin_artist[2:]
+        bin_artist = bytr[ax + 4:ay]
+        bin_artist = bin_artist[5:-1]
+        str_artist = bin_artist.decode('utf-16-be')
     else:
         str_artist = '.'
 
     if sx > 0:
-        bin_song = byt[sx + 4:sy].replace('\x00', '')
-        str_song = bin_song[2:]
+        bin_song = bytr[sx + 4:sy]
+        bin_song = bin_song[5:-1]
+        str_song = bin_song.decode('utf-16-be')
     else:
         str_song = '.'
 

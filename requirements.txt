@@ -1,2 +1,4 @@
 PyQT5
 polling2
+lxml
+requests
