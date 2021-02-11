@@ -62,6 +62,7 @@ class ConfigFile:  # read and write to config.ini
             self.libpath = config.get('Settings', 'libpath')
             self.url = config.get('Settings', 'url')
             self.file = config.get('Settings', 'file')
+            self.cover = is_bool(config.get('Settings', 'cover'))
             self.interval = config.get('Settings', 'interval')
             self.delay = config.get('Settings', 'delay')
             self.multi = is_bool(config.get('Settings', 'multi'))
@@ -82,11 +83,12 @@ class ConfigFile:  # read and write to config.ini
         except configparser.NoOptionError:
             pass
 
-    def put(self, local, libpath, url, file, interval, delay, multi, quote, a_pref, a_suff, s_pref, s_suff, notif):
+    def put(self, local, libpath, url, file, interval, delay, multi, quote, a_pref, a_suff, s_pref, s_suff, notif, cover):
         self.cparser.set('Settings', 'local', local)
         self.cparser.set('Settings', 'libpath', libpath)
         self.cparser.set('Settings', 'url', url)
         self.cparser.set('Settings', 'file', file)
+        self.cparser.set('Settings', 'cover', cover)
         self.cparser.set('Settings', 'interval', interval)
         self.cparser.set('Settings', 'delay', delay)
         self.cparser.set('Settings', 'multi', str(multi))
@@ -117,6 +119,7 @@ class SettingsUI:  # create settings form window
         self.layoutH0a = QHBoxLayout()
         self.layoutH1 = QHBoxLayout()
         self.layoutH2 = QHBoxLayout()
+        self.layoutH8 = QHBoxLayout()
         self.layoutH3 = QHBoxLayout()
         self.layoutH4 = QHBoxLayout()
         self.layoutH5 = QHBoxLayout()
@@ -239,6 +242,17 @@ data on separate lines.')
         self.multiDesc.setStyleSheet('color: grey')
         self.layoutH2.addWidget(self.multiDesc)
         self.layoutV.addLayout(self.layoutH2)
+        # cover
+        self.coverLabel = QLabel('Cover File')
+        self.coverLabel.setFont(self.fBold)
+        self.layoutV.addWidget(self.coverLabel)
+        self.coverCbox = QCheckBox()
+        self.coverCbox.setMaximumWidth(25)
+        self.layoutH8.addWidget(self.coverCbox)
+        self.coverDesc = QLabel('Write a cover image to the same folder as track information.')
+        self.coverDesc.setStyleSheet('color: grey')
+        self.layoutH8.addWidget(self.coverDesc)
+        self.layoutV.addLayout(self.layoutH8)
         # quotes
         self.quoteLabel = QLabel('Song Quote Indicator')
         self.quoteLabel.setFont(self.fBold)
@@ -325,6 +339,7 @@ when new song is retrieved.')
         self.intervalEdit.setText(str(c.interval))
         self.delayEdit.setText(str(c.delay))
         self.multiCbox.setChecked(c.multi)
+        self.coverCbox.setChecked(c.cover)
         self.quoteCbox.setChecked(c.quote)
         self.a_prefixEdit.setText(c.a_pref)
         self.a_suffixEdit.setText(c.a_suff)
@@ -341,6 +356,7 @@ when new song is retrieved.')
         interval = self.intervalEdit.text()
         delay = self.delayEdit.text()
         multi = str(self.multiCbox.isChecked())
+        cover = str(self.coverCbox.isChecked())
         quote = str(self.quoteCbox.isChecked())
         a_pref = self.a_prefixEdit.text().replace(" ", "|_0")
         a_suff = self.a_suffixEdit.text().replace(" ", "|_0")
@@ -349,7 +365,7 @@ when new song is retrieved.')
         notif = str(self.notifCbox.isChecked())
 
         c = ConfigFile(self.conf, self.conffile)
-        c.put(local, libpath, url, file, interval, delay, multi, quote, a_pref, a_suff, s_pref, s_suff, notif)
+        c.put(local, libpath, url, file, interval, delay, multi, quote, a_pref, a_suff, s_pref, s_suff, notif, cover)
 
     # radio button action
     def on_radiobutton_select(self, b):
@@ -583,7 +599,7 @@ def gettrack(c, t):  # get last played track
         sera_dir = conf.libpath
         hist_dir = os.path.abspath(os.path.join(sera_dir, "History"))
         sess_dir = os.path.abspath(os.path.join(hist_dir, "Sessions"))
-        tdat = getlasttrack(sess_dir)
+        tdat = getlasttrack(sess_dir, conf)
         if tdat is False:
             return False
     else:  # remotely derived
@@ -659,7 +675,7 @@ def getsessfile(directory, showlast=True):
         return file
 
 
-def getlasttrack(s):  # function to parse out last track from binary session file
+def getlasttrack(s, conf):  # function to parse out last track from binary session file
     # get latest session file
     sess = getsessfile(s)
     if sess is False:
@@ -704,34 +720,37 @@ def getlasttrack(s):  # function to parse out last track from binary session fil
             ay = byt.find('\x00\x00\x00\x00\x0f')
 
     # parse song file
-    mx = byt.find('\x00\x00\x00\x02')  # field start
+    if(conf.cover == 1):
+        mx = byt.find('\x00\x00\x00\x02')  # field start
 
-    if mx > 0:
-        my = byt.find('\x00\x00\x00\x06')  # field end
+        if mx > 0:
+            my = byt.find('\x00\x00\x00\x06')  # field end
 
-    if mx > 0:
-        bin_mp3 = bytr[mx + 4:my]
-        bin_mp3 = bin_mp3[4:-2]
-        print(bin_mp3.hex())
-        str_mp3 = bin_mp3.decode('utf-16-be')
-        tag = Tag()
-        tag.parse(str_mp3)
-        if len(tag.images) > 0:
-            extension = mimetypes.guess_extension(tag.images[0].mime_type)
-            f = open('cover'+extension, 'wb')
-            f.write(tag.images[0].image_data)
-            f.close()
+        if mx > 0:
+            bin_mp3 = bytr[mx + 4:my]
+            bin_mp3 = bin_mp3[4:-2]
+            str_mp3 = bin_mp3.decode('utf-16-be')
+            tag = Tag()
+            tag.parse(str_mp3)
+            dir_name = os.path.dirname(os.path.abspath(conf.file))
+            if len(tag.images) > 0:
+                extension = mimetypes.guess_extension(tag.images[0].mime_type)
+                f = open(os.path.join(dir_name, 'cover'+extension), 'wb')
+                f.write(tag.images[0].image_data)
+                f.close()
 
     # cleanup and return
     if ax > 0:
-        bin_artist = byt[ax + 4:ay].replace('\x00', '')
-        str_artist = bin_artist[2:]
+        bin_artist = bytr[ax + 4:ay]
+        bin_artist = bin_artist[5:-1]
+        str_artist = bin_artist.decode('utf-16-be')
     else:
         str_artist = '.'
 
     if sx > 0:
-        bin_song = byt[sx + 4:sy].replace('\x00', '')
-        str_song = bin_song[2:]
+        bin_song = bytr[sx + 4:sy]
+        bin_song = bin_song[5:-1]
+        str_song = bin_song.decode('utf-16-be')
     else:
         str_song = '.'
 
