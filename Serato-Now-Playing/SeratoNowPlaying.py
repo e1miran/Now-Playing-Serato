@@ -701,6 +701,17 @@ def getlasttrack(s):  # function to parse out last track from binary session fil
         if ay == -1:
             ay = byt.find('\x00\x00\x00\x00\x0f')
 
+    # parse song file
+    mx = byt.find('\x00\x00\x00\x02')  # field start
+
+    if mx > 0:
+        my = byt.find('\x00\x00\x00\x00\x06')  # field end
+
+    if mx > 0:
+        bin_mp3 = byt[mx + 4:my].replace('\x00', '')
+        str_mp3 = bin_mp3[1:]
+        print(str_mp3)
+
     # cleanup and return
     if ax > 0:
         bin_artist = byt[ax + 4:ay].replace('\x00', '')
