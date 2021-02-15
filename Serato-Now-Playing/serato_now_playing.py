@@ -20,9 +20,7 @@ import socket
 from socketserver import ThreadingMixIn
 from string import Template
 import sys
-from time import sleep, time
-
-import requests
+import time
 
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from PyQt5.QtWidgets import \
@@ -43,7 +41,8 @@ from PyQt5.QtWidgets import \
                             QVBoxLayout, \
                             QWidget
 from PyQt5.QtGui import QIcon, QFont
-import lxml.html
+
+import nowplaying.serato
 
 __author__ = "Ely Miranda"
 __version__ = "1.5.0"
@@ -51,7 +50,6 @@ __license__ = "MIT"
 
 # define global variables
 INITIALIZED = PAUSED = False
-TRACK = ''
 CURRENTARTIST = ''
 CURRENTSONG = ''
 
@@ -850,15 +848,15 @@ class WebServer(QThread):
 
         conf = ConfigFile(CONFIG, CONFIG_FILE)
         while not conf.httpenabled and not self.endthread:
-            sleep(5)
+            time.sleep(5)
             conf = ConfigFile(CONFIG, CONFIG_FILE)
 
         while not self.endthread:
             while PAUSED:
-                sleep(1)
+                time.sleep(1)
 
             resetserver = False
-            sleep(1)
+            time.sleep(1)
             conf = ConfigFile(CONFIG, CONFIG_FILE)
 
             if conf.httpdir != self.prevdir:
@@ -875,7 +873,7 @@ class WebServer(QThread):
 
             if resetserver:
                 self.stop()
-                sleep(5)
+                time.sleep(5)
 
             if not self.server:
                 try:
@@ -922,12 +920,12 @@ class TrackPoll(QThread):
     def run(self):
         ''' track polling process '''
 
-        global CONFIG, CONFIG_FILE, TRACK
+        global CONFIG, CONFIG_FILE
 
         # sleep until we have something to write
         conf = ConfigFile(CONFIG, CONFIG_FILE)
         while not conf.file and not self.endthread:
-            sleep(5)
+            time.sleep(5)
             conf = ConfigFile(CONFIG, CONFIG_FILE)
 
         while not self.endthread:
@@ -939,13 +937,12 @@ class TrackPoll(QThread):
             else:
                 interval = conf.interval
 
-            sleep(interval)
-            new = gettrack(ConfigFile(CONFIG, CONFIG_FILE), TRACK)
+            time.sleep(interval)
+            new = gettrack(ConfigFile(CONFIG, CONFIG_FILE))
             if not new or new == self.previoustrack:
                 continue
-            TRACK = new
             self.previoustrack = new
-            sleep(conf.delay)
+            time.sleep(conf.delay)
             writetxttrack(conf.file, new)
             if new:
                 self.currenttrack.emit(new)
@@ -960,7 +957,7 @@ class TrackPoll(QThread):
 # FUNCTIONS ####
 
 
-def gettrack(configuration, currenttrack):  # pylint: disable=too-many-branches
+def gettrack(configuration):  # pylint: disable=too-many-branches
     ''' get last played track '''
     global PAUSED, CURRENTARTIST, CURRENTSONG
 
@@ -978,47 +975,46 @@ def gettrack(configuration, currenttrack):  # pylint: disable=too-many-branches
         hist_dir = os.path.abspath(os.path.join(sera_dir, "History"))
         sess_dir = os.path.abspath(os.path.join(hist_dir, "Sessions"))
         if os.path.isdir(sess_dir):
-            tdat = getlasttrack(sess_dir)
-        if not tdat:
-            return None
+            serato = nowplaying.serato.SeratoSessionHandler(sess_dir)
+            serato.process_sessions()
+
     else:  # remotely derived
-        # get and parse playlist source code
-        page = requests.get(conf.url)
-        tree = lxml.html.fromstring(page.text)
-        item = tree.xpath(
-            '(//div[@class="playlist-trackname"]/text())[last()]')
-        tdat = item
 
-    # cleanup
-    tdat = str(tdat)
-    tdat = tdat.replace("['", "")\
-               .replace("']", "")\
-               .replace("[]", "")\
-               .replace("\\n", "")\
-               .replace("\\t", "")\
-               .replace("[\"", "").replace("\"]", "")
-    tdat = tdat.strip()
+        serato = nowplaying.serato.SeratoLivePlaylistHandler(conf.url)
 
-    if tdat == "" or not tdat:
+    (artist, song) = serato.getplayingtrack()
+
+    if not artist and not song:
         return None
 
-    trackdata = tdat.split(" - ", 1)
-
-    if trackdata[0] == '.':
+    if artist:
+        artist = artist.strip()
+    else:
         artist = ''
-    else:
-        artist = configuration.a_pref + trackdata[0] + configuration.a_suff
 
-    if trackdata[1] == '.':
-        song = ''
-    elif conf.quote:  # handle quotes
-        song = configuration.s_pref + "\"" + trackdata[
-            1] + "\"" + configuration.s_suff
+    if song:
+        song = song.strip()
     else:
-        song = configuration.s_pref + trackdata[1] + configuration.s_suff
+        song = ''
 
     if artist == '' and song == '':
         return None
+
+    if artist == '.':
+        artist = ''
+    else:
+        artist = configuration.a_pref + artist + configuration.a_suff
+
+    if song == '.':
+        song = ''
+    elif conf.quote:  # handle quotes
+        song = configuration.s_pref + "\"" + song + "\"" + configuration.s_suff
+    else:
+        song = configuration.s_pref + song + configuration.s_suff
+
+    if song == CURRENTSONG and artist == CURRENTARTIST:
+        return None
+
 
     if not conf.local:
         CURRENTARTIST = artist
@@ -1032,115 +1028,7 @@ def gettrack(configuration, currenttrack):  # pylint: disable=too-many-branches
     else:
         tdat = artist + " - " + song
 
-    if tdat != currenttrack:
-        return tdat
-
-    return None
-
-
-def getsessfile(directory, showlast=True):
-    ''' locate the session file '''
-    dsstorefile = os.path.abspath(os.path.join(directory, ".DS_Store"))
-
-    if os.path.exists(dsstorefile):
-        os.remove(dsstorefile)
-
-    # if Serato hasn't been started, then FNF might
-    # occur if the directory isn't there yet.
-    try:
-        files = sorted(
-            os.listdir(directory),
-            key=lambda x: os.path.getmtime(os.path.join(directory, x)))
-    except FileNotFoundError:
-        return None
-
-    # If there hasn't been a session, then files might be empty
-    if not files:
-        return None
-    first = files[0]
-    last = files[-1]
-
-    if showlast:
-        file = os.path.abspath(os.path.join(directory, last))
-    else:
-        file = os.path.abspath(os.path.join(directory, first))
-
-    file_mod_age = time() - os.path.getmtime(file)
-
-    # avoid brand new session data and really old session data
-    if file_mod_age > 10:  # 2592000:
-        return None
-
-    sleep(0.5)
-    return file
-
-
-def getlasttrack(sessionfile):  # pylint: disable=too-many-branches
-    ''' parse out last track from binary session file
-        get latest session file
-    '''
-    global CURRENTARTIST, CURRENTSONG
-    sess = getsessfile(sessionfile)
-    if not sess:
-        return None
-
-    # open and read session file
-    while os.access(sess, os.R_OK) is False:
-        sleep(0.5)
-
-    with open(sess, "rb") as sessionfh:
-        raw = sessionfh.read()
-
-    # decode and split out last track of session file
-    binstr = raw.decode('latin').rsplit('oent')  # split tracks
-    byt = binstr[-1]  # last track chunk
-    # print(byt)
-    # determine if playing
-    if (byt.find('\x00\x00\x00-') > 0 or  # ejected or is
-            byt.find('\x00\x00\x00\x003') > 0):  # loaded, but not played
-        return None
-
-    # parse song
-    songx = byt.find('\x00\x00\x00\x00\x06')  # field start
-
-    if songx > 0:  # field end
-        songy = byt.find('\x00\x00\x00\x00\x07')
-        if songy == -1:
-            songy = byt.find('\x00\x00\x00\x00\x08')
-        if songy == -1:
-            songy = byt.find('\x00\x00\x00\x00\t')
-        if songy == -1:
-            songy = byt.find('\x00\x00\x00\x00\x0f')
-
-    # parse artist
-    artistx = byt.find('\x00\x00\x00\x00\x07')  # field start
-
-    if artistx > 0:
-        artisty = byt.find('\x00\x00\x00\x00\x08')  # field end
-        if artisty == -1:
-            artisty = byt.find('\x00\x00\x00\x00\t')
-        if artisty == -1:
-            artisty = byt.find('\x00\x00\x00\x00\x0f')
-
-    # cleanup and return
-    if artistx > 0:
-        bin_artist = byt[artistx + 4:artisty].replace('\x00', '')
-        str_artist = bin_artist[2:]
-    else:
-        str_artist = '.'
-
-    if songx > 0:
-        bin_song = byt[songx + 4:songy].replace('\x00', '')
-        str_song = bin_song[2:]
-    else:
-        str_song = '.'
-
-    CURRENTARTIST = str_artist
-    CURRENTSONG = str_song
-
-    t_info = str(str_artist).strip() + " - " + str(str_song).strip()
-
-    return t_info
+    return tdat
 
 
 def writetxttrack(filename, track=""):
