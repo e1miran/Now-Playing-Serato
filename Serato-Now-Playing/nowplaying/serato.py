@@ -519,6 +519,9 @@ class SeratoLivePlaylistHandler():  # pylint: disable=too-few-public-methods
                    .replace("[\"", "").replace("\"]", "")
         tdat = tdat.strip()
 
+        if not tdat:
+            return None, None
+
         # artist - track
         #
         # The only hope we have is to split on ' - ' and hope that the
