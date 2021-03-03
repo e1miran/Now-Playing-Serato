@@ -1,7 +1,9 @@
 cryptography
+jinja2
 lxml
 polling2
 pyinstaller
 PyQT5
 requests
+tinytag
 urllib3

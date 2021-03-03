@@ -73,9 +73,12 @@ class ChunkParser():  #pylint: disable=too-few-public-methods
 
         try:
             decoded = encoded.decode('utf-16-be')
+            # strip ending null character at the end
+            decoded = decoded[:-1]
         except UnicodeDecodeError:
             print(f'Blew up on {encoded}:')
             traceback.print_stack()
+            # just take out all the nulls this time and hope for the best
             decoded = encoded.replace(b'\x00', b'')
         return decoded
 
@@ -161,12 +164,13 @@ class ChunkTrackADAT(ChunkParser):  #pylint: disable=too-many-instance-attribute
         self.played = False
         self.playername = None
         self.playtime = None
+        self.publisher = None
         self.remixer = None
         self.row = 0
         self.sessionid = 0
-        self.starttime = None
+        self.starttime = datetime.datetime.now()
         self.title = None
-        self.updatedat = None
+        self.updatedat = self.starttime
         self.year = None
 
         self.field16 = None
@@ -179,10 +183,11 @@ class ChunkTrackADAT(ChunkParser):  #pylint: disable=too-many-instance-attribute
 
         self.data = data
         super().__init__(chunktype='adat', data=self.data)
-        self.process()
-        # free some RAM
-        self.data = None
-        self.chunkheader = None
+        if data:
+            self.process()
+            # free some RAM
+            self.data = None
+            self.chunkheader = None
 
     def process(self):  #pylint: disable=too-many-branches,too-many-statements
         ''' process the 'adat' chunk '''
@@ -281,6 +286,16 @@ class ChunkTrackADAT(ChunkParser):  #pylint: disable=too-many-instance-attribute
                 print(f'Unknown field: {field}')
                 break
 
+        # what people would expect in a filename meta
+        # appears to be in pathstr
+        if not self.filename:
+            self.filename = self.pathstr
+
+        # what ID3 and friends call publisher, Serato
+        # calls label
+        if not self.publisher:
+            self.publisher = self.label
+
 
 class ChunkVRSN(ChunkParser):  #pylint: disable=too-many-instance-attributes, too-few-public-methods
     ''' Process the 'vrsn' chunk '''
@@ -361,25 +376,43 @@ class SessionFile():  # pylint: disable=too-few-public-methods
         yield self
 
 
-class SeratoSessionHandler():
-    ''' Generic handler to get the currently playing track '''
+class SeratoHandler():
+    ''' Generic handler to get the currently playing track.
+
+        To use Serato Live Playlits, construct with:
+            SeratoHandler(seratourl='url')
+
+
+        To use local Serato directory, construct with:
+            SeratoHandler(seratodir='/path/to/_Serato_')
+
+    '''
 
     # These class globals are for trying to keep track of what is
     # actually on the decks
 
     decks = {}
-    playingadat = None
+    playingadat = ChunkTrackADAT()
     lastprocessed = None
     lastfetched = None
+    mode = None
 
-    def __init__(self, seratodir):
-        self.seratodir = seratodir
-        self.watchdeck = None
+    def __init__(self, seratodir=None, seratourl=None):
+        if seratodir:
+            self.seratodir = seratodir
+            self.watchdeck = None
+            self.parsedsessions = []
+            SeratoHandler.mode = 'local'
 
-        self.parsedsessions = []
+        if seratourl:
+            self.url = seratourl
+            SeratoHandler.mode = 'remote'
 
     def process_sessions(self):
         ''' read and process all of the relevant session files '''
+
+        if SeratoHandler.mode == 'remote':
+            return
 
         self.parsedsessions = []
 
@@ -419,15 +452,19 @@ class SeratoSessionHandler():
             if file_mod_age > 600:
                 continue
 
-            if not SeratoSessionHandler.lastprocessed or\
-               filetimestamp > SeratoSessionHandler.lastprocessed:
-                SeratoSessionHandler.lastprocessed = filetimestamp
+            if not SeratoHandler.lastprocessed or\
+               filetimestamp > SeratoHandler.lastprocessed:
+                SeratoHandler.lastprocessed = filetimestamp
                 self.parsedsessions.append(SessionFile(sessionfilename))
 
     def computedecks(self):
         ''' based upon the session data, figure out what is actually
             on each deck '''
-        SeratoSessionHandler.decks = {}
+
+        if SeratoHandler.mode == 'remote':
+            return
+
+        SeratoHandler.decks = {}
 
         # keep track of each deck.
         # on startup, if deck #1 has not been seen, then
@@ -441,64 +478,59 @@ class SeratoSessionHandler():
             for adat in index.adats:
                 if 'playtime' in adat and adat.playtime > 0:
                     continue
-                if adat.deck in SeratoSessionHandler.decks:
-                    if adat.deck in SeratoSessionHandler.decks:
-                        if adat.updatedat < SeratoSessionHandler.decks[
+                if adat.deck in SeratoHandler.decks:
+                    if adat.deck in SeratoHandler.decks:
+                        if adat.updatedat < SeratoHandler.decks[
                                 adat.deck].updatedat:
                             continue
-                SeratoSessionHandler.decks[adat.deck] = adat
+                SeratoHandler.decks[adat.deck] = adat
 
     def computeplaying(self):  # pylint: disable=no-self-use
         ''' set the adat for the playing track based upon the
             computed decks '''
 
-        # at this point, SeratoSessionHandler.decks should have
+        if SeratoHandler.mode == 'remote':
+            return
+
+        # at this point, SeratoHandler.decks should have
         # all decks with their most recent unplayed tracks
 
         # The assumption here is that whatever is the oldest
         # non-played track is currently playing
 
-        SeratoSessionHandler.playingadat = None
-        for deck in SeratoSessionHandler.decks:
+        SeratoHandler.playingadat = ChunkTrackADAT()
+        for deck in SeratoHandler.decks:
+            if SeratoHandler.decks[
+                    deck].starttime < SeratoHandler.playingadat.starttime:
+                SeratoHandler.playingadat = SeratoHandler.decks[deck]
 
-            # have to start some where....
-            if not SeratoSessionHandler.playingadat:
-                SeratoSessionHandler.playingadat = SeratoSessionHandler.decks[
-                    deck]
-                continue
-
-            if SeratoSessionHandler.decks[
-                    deck].starttime < SeratoSessionHandler.playingadat.starttime:
-                SeratoSessionHandler.playingadat = SeratoSessionHandler.decks[
-                    deck]
-
-    def getplayingtrack(self):
+    def getlocalplayingtrack(self):
         ''' parse out last track from binary session file
             get latest session file
         '''
 
-        if not SeratoSessionHandler.lastprocessed:
+        if SeratoHandler.mode == 'remote':
+            return None, None
+
+        if not SeratoHandler.lastprocessed:
             self.process_sessions()
 
-        if not SeratoSessionHandler.lastfetched or \
-           SeratoSessionHandler.lastprocessed > SeratoSessionHandler.lastfetched:
-            SeratoSessionHandler.lastfetched = SeratoSessionHandler.lastprocessed
+        if not SeratoHandler.lastfetched or \
+           SeratoHandler.lastprocessed > SeratoHandler.lastfetched:
+            SeratoHandler.lastfetched = SeratoHandler.lastprocessed
 
             self.computedecks()
             self.computeplaying()
 
-        if SeratoSessionHandler.playingadat:
-            return SeratoSessionHandler.playingadat.artist, SeratoSessionHandler.playingadat.title
+        if SeratoHandler.playingadat:
+            return SeratoHandler.playingadat.artist, SeratoHandler.playingadat.title
         return None, None
 
-class SeratoLivePlaylistHandler():  # pylint: disable=too-few-public-methods
-    ''' Handler for dealing with Serato Live Playlists '''
-
-    def __init__(self, url=None):
-        self.url = url
-
-    def getplayingtrack(self):
+    def getremoteplayingtrack(self):
         ''' get the currently playing song from Live Playlists '''
+
+        if SeratoHandler.mode == 'local':
+            return None, None
 
         #
         # It is hard to believe in 2021, we are still scraping websites
@@ -520,27 +552,66 @@ class SeratoLivePlaylistHandler():  # pylint: disable=too-few-public-methods
         tdat = tdat.strip()
 
         if not tdat:
+            SeratoHandler.playingadat = ChunkTrackADAT()
             return None, None
 
         # artist - track
         #
         # The only hope we have is to split on ' - ' and hope that the
         # artist/song doesn't have a similar split.
-        (artist, song) = tdat.split(" - ", 1)
+        (artist, song) = tdat.split(' - ', 1)
 
         if not artist or artist == '.':
             artist = None
+        else:
+            artist = artist.strip()
+
+        SeratoHandler.playingadat.artist = artist
 
         if not song or song == '.':
             song = None
+        else:
+            song = song.strip()
+
+        SeratoHandler.playingadat.title = song
+
+        if not song and not artist:
+            SeratoHandler.playingadat = ChunkTrackADAT()
 
         return artist, song
+
+    def getplayingtrack(self):
+        ''' generate a dict of data '''
+
+        if SeratoHandler.mode == 'local':
+            return self.getlocalplayingtrack()
+        return self.getremoteplayingtrack()
+
+    def getplayingmetadata(self):  #pylint: disable=too-many-branches
+        ''' take the current adat and generate a media dict '''
+        metadata = {}
+
+        self.getplayingtrack()
+
+        if not SeratoHandler.playingadat:
+            return None
+
+        for key in [
+                'album', 'artist', 'bitrate', 'bpm', 'composer', 'filename',
+                'genre', 'key', 'publisher', 'lang', 'title', 'year'
+        ]:
+
+            if hasattr(SeratoHandler.playingadat, key) and getattr(
+                    SeratoHandler.playingadat, key):
+                metadata[key] = getattr(SeratoHandler.playingadat, key)
+
+        return metadata
 
 
 def main():
     ''' entry point as a standalone app'''
 
-    seratohandler = SeratoSessionHandler(sys.argv[1])
+    seratohandler = SeratoHandler(seratodir=sys.argv[1])
     seratohandler.process_sessions()
     seratohandler.getplayingtrack()
     if seratohandler.playingadat:

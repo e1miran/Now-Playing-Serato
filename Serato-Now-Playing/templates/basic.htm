@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8" http-equiv="refresh" content="30" >
+    <meta charset="utf-8" http-equiv="refresh" content="30">
     <title>Titlecard</title>
     <style>
       div {
@@ -23,13 +23,13 @@
   </head>
   <body>
     <div id="titlecard">
-      <p>$songstring</p>
-      <p>$artiststring</p>
+      <p>Title: {{ title }}</p>
+      <p>Artist: {{ artist }}</p>
     </div>
     <script>
-      $$(document).ready(function() {
-        $$('#titlecard').delay(1000).fadeIn(2000);
-        $$('#titlecard').delay(6000).fadeOut(2000);
+      $(document).ready(function() {
+        $('#titlecard').delay(1000).fadeIn(2000);
+        $('#titlecard').delay(6000).fadeOut(2000);
       });
     </script>
   </body>
