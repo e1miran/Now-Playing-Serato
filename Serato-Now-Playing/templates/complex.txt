@@ -1,0 +1,9 @@
+Title: {{ title }} [Track: {{ track }} / {{ track_total }}]
+Language: {{ lang }}
+Genre: {{ genre }} / BPM: {{ bpm }} / Key: {{ key }}
+Artist: {{ artist }}
+Composer: {{ composer }}
+Album: {{ album }} [Disc: {{ disc }} / {{ disc_total }} ]
+Album Artist: {{ albumartist }}
+Publisher: {{ publisher }}
+Year: {{ year }}
