@@ -60,15 +60,19 @@ Due to security measures in macOS Sierra and later, apps downloaded from outside
 * Unzip the package and copy the entire unzipped folder containing the 'SeratoNowPlaying.exe' file and supporting files to the directory you'd like the app to run from (i.e.: C:\Program Files).
 * Create a new, blank text file with the Notepad app or similar text editor. Name it as you please, and save this text file anywhere you like on your pc and close the text editor.
 
-### First time running the app
+## Usage
 
-That's it. Execute the app from the location where you placed it. On Windows, you may need to right-click and select "Run as Administrator'.
+Start the __Now Playing__ app.from the location where you placed it. On Windows, you may need to right-click and
+select "Run as Administrator'. The app is controlled and configured by accessing the menu from the icon in the
+Windows system tray or Mac menu bar after configuration.
 
-The first time you run the app a settings window will appear. Populate the fields accordingly and press save. Once saved, the app will start polling for new songs. The app can be controlled and exited from the system task tray on Windows or the menu bar icon on macOS.
+However, the first time you run the app a [Settings](#settings) window will appear. Populate the fields accordingly and press
+save. Once saved, the app will start polling for new songs. The app can be controlled and exited from the system task
+tray on Windows or the menu bar icon on macOS.
 
-![Task Tray](https://github.com/e1miran/Now-Playing-Serato/blob/master/git-images/systray.png?raw=true) Windows
+![Task Tray](git-images/systray.png?raw=true) Windows
 
-![Menu Bar](https://github.com/e1miran/Now-Playing-Serato/blob/master/git-images/menubar.png?raw=true) macOS
+![Menu Bar](git-images/menubar.png?raw=true) macOS
 
 ### Uninstallation
 
@@ -76,10 +80,12 @@ The process for uninstalling the app is the same on both platforms.  Simply dele
 
 ## Settings
 
-Upon initial execution of the app, a settings window will appear. Subsequently, the settings can be accessed from the icon in the Windows task tray or Mac menu bar.  The available configuration settings are:
+Upon initial execution of the app, a settings window will appear. Subsequently, the settings can be accessed from the icon in the Windows task tray or Mac menu bar.
+
+### General Settings
 
 * __Track Retrieval Mode__ - Select either Local or Remote mode.  Local is the preferred method of retrieval and the default.
-  * Local mode uses Serato's local history log to acquire the track data.
+  * Local mode uses Serato's local history log to acquire the track data. [How to use Local Mode](#local-mode)
   * Remote mode retrieves remote track data from Serato Live Playlists.  This mode requires constant connection to the internet and a Serato account with Live Playlists enabled. [How to use Remote Mode](#remote-mode)
 
 * __Serato Library Path__ - (_Local Mode Only_) Location of the folder that contains Serato library and history data.  This folder named "\_Serato\_" is created and used by Serato DJ. If you keep your library on an external drive, you will have two "\_Serato\_" folders - one on the external drive and the other in the "Music" folder of your internal drive.  You must select the internal drive folder, as it is the one that contains the history folder and log files.
@@ -96,7 +102,7 @@ Upon initial execution of the app, a settings window will appear. Subsequently, 
 
 * __File__ - This is the file to which the current track info is written
 
-* __TXT Template__ - The [Jinja2 template][https://jinja.palletsprojects.com/en/2.11.x/templates/] file that will be used when the song has been updated.
+* __TXT Template__ - The [Jinja2 template](https://jinja.palletsprojects.com/en/2.11.x/templates/) file that will be used when the song has been updated. See [More on Template Files](#more-on-template-files) below.
 
 * __Write Delay__ - The amount of time, in seconds to delay writing the new track info once it's retrieved. If not populated, it will default to 0 seconds.
   * A setting of zero will update the track info on screen immediately as a new track is detected.  This may be too soon for some DJ's mixing style, so a delay can be added.
@@ -106,24 +112,21 @@ Upon initial execution of the app, a settings window will appear. Subsequently, 
 * __Port__ - The port that the HTTP server will answer, both on localhost and any remote hosts that may query it.  For security reasons,
 this port should be protected by a firewall to limit which hosts will be permitted to connect.
 
-* __HTML Template__ - The [Jinja2 template][https://jinja.palletsprojects.com/en/2.11.x/templates/] file that will be used when the song has been updated.
+* __HTML Template__ - The [Jinja2 template](https://jinja.palletsprojects.com/en/2.11.x/templates/) file that will be used when the song has been updated. See [More on Template Files](#more-on-template-files) below.
 
 * __Server Path__ - Directory to be used to store the web server index file that is created after processing the template.
 
-![Local Mode Settings](https://github.com/e1miran/Now-Playing-Serato/blob/master/git-images/local.png?raw=true)
-![Remote Mode Settings](https://github.com/e1miran/Now-Playing-Serato/blob/master/git-images/remote.png?raw=true)
-
-## Usage
-
-Start the __Now Playing__ app.  The app is controlled and configured by accessing the menu from the icon in the windows system tray or Mac menu bar.
-
 ### Local Mode
+
+![Local Mode Settings](git-images/local.png?raw=true)
 
 Local Mode is used when the __Now Playing__ app is running on the same machine as Serato.  Configure the Serato Library Path
 where Serato is located.  This method is the recommended installation as much more information is available and
 __Now Playing__ is generally more reliablely correct.
 
 ### Remote Mode
+
+![Remote Mode Settings](git-images/remote.png?raw=true)
 
 Remote mode can be used when the streaming PC is not the same as the PC on which Serato DJ is playing but the HTTP Server
 Mode cannot be used.
@@ -141,15 +144,36 @@ due to limitations on the Serato-side.
 
 ### HTTP Server Mode
 
-__Now Playing__ has the ability to serve a web page after a song change.  This option allows users to utilize
-features such as the OBS Browser source for dynamically changing content.  Connecting to __Now Playing__'s web server will give either a web
-page that is empty except for an HTTP refresh directive or a title card.  The title card is generated by taking the template file and replacing
-'$artiststring' or '$songstring' with the values generated by Serato. After serving the title card, it is deleted and the HTTP refresh directives
-are again returned. The title card is regenerated for every song change.
+__Now Playing__ has the ability to serve a web page after a song change.  This option
+allows users to utilize features such as the OBS Browser source for dynamically
+changing content.  There are three URLs supported:
 
-#### More on Template Files
+* /index.html (or /index.htm or just /)
 
-In order to provide maximum formatting flexibility, [Jinja2 template][https://jinja.palletsprojects.com/en/2.11.x/templates/]
+This URL generates either a title card based upon the preconfigured template or
+a refresh document.  The title card will be given exactly once upon connection with
+the refresh document being returned in subsequent connections until a new track has
+been detected.  This process allows for using fades and other HTML tricks.
+
+* /cover.jpg or /cover.png
+
+This URL will return the cover image, if available. It recommended to use the '{{ coverurl }}' template variable
+to determine which one to use. Note that the format (JPEG or PNG) is entirely dependent upon
+the store image in the media.  __Now Playing__ does not do image conversion or support more than JPEG or PNG
+images.
+
+* /favicon.ico
+
+This URL will return __Now Playing__'s icon.
+
+#### Extra Content
+
+For security reasons, __Now Playing__ will ONLY serve either the HTTP refresh page or the titlecard.  Any other content (images,
+CSS, JavaScript libraries, etc) must come from another source.
+
+## More on Template Files
+
+In order to provide maximum formatting flexibility, [Jinja2 template](https://jinja.palletsprojects.com/en/2.11.x/templates/)
 files are used to format the output.  __Now Playing__ provides several example templates that may be modified as necessary
 to suit your needs.  Be aware that some information provided to the templating engine is only available when run in Local
 Mode and only if your songs and videos have the proper IDv3 or equivalent tags in them.  A tool such as
@@ -182,9 +206,72 @@ Currently supported variables:
 
 When HTTP Server mode is active:
 
+| Variable       | Description |
+|:--------------:|:-----------:|
 | coverurl | Location to fetch the cover |
 
-#### Extra Content
+### Template Examples
 
-For security reasons, __Now Playing__ will ONLY serve either the HTTP refresh page or the titlecard.  Any other content (images,
-CSS, JavaScript libraries, etc) must come from another source.
+Let us pretend that [Björk's Jóga](https://musicbrainz.org/recording/83534ada-9f60-4093-bbf3-ca182a03cf8b) was
+the currently playing song.
+
+Given a template like this:
+
+```jinja
+{{ artist }} - {{ title }}
+
+```
+
+__Now Playing__ would generate:
+
+```text
+Björk - Jóga
+```
+
+If the application is running in [local mode](#local-mode), then we could use more a template with
+more content.  A template such as:
+
+```jinja
+Song: "{{ title }}"
+Artist: {{ artist }}
+Album: {{ album }}
+```
+
+would generate:
+
+```text
+Song: "Jóga"
+Artist: Björk
+Album: Homogenic
+```
+
+Since we are using [Jinja2 templates](https://jinja.palletsprojects.com/en/2.11.x/templates/), we
+also have some special effects available to us:
+
+Uppercase:
+
+```jinja
+{{ artist | upper }}
+```
+
+turns into:
+
+```text
+BJÖRK
+```
+
+Maybe our media files are not quite correct and they have 'björk'?  We can easily capitalize them in the template:
+
+```jinja
+{{ artist | capitalize }}
+```
+
+Ta-da:
+
+```text
+Björk
+```
+
+There are many many other things one can do with the Jinja templating system.  Please
+see [the documentation](https://jinja.palletsprojects.com/en/2.11.x/templates/) for more
+information and ideas!
