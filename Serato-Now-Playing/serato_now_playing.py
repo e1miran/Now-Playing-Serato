@@ -999,10 +999,6 @@ def gettrack(configuration):  # pylint: disable=too-many-branches
     if 'filename' in nextmeta:
         nextmeta = nowplaying.utils.getmoremetadata(nextmeta)
 
-    if nextmeta['artist'] == CURRENTMETA['fetchedartist'] and nextmeta[
-            'title'] == CURRENTMETA['fetchedtitle']:
-        return None
-
     CURRENTMETA = nextmeta
 
     return CURRENTMETA
