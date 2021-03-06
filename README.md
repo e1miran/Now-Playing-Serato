@@ -74,6 +74,22 @@ tray on Windows or the menu bar icon on macOS.
 
 ![Menu Bar](git-images/menubar.png?raw=true) macOS
 
+### Menu Bar Options
+
+* __Settings__ - Reconfigure the application after going through the initial configuration.
+See [Settings](#settings) for more information.
+
+* __Active/Passive__ - Toggle that determines which mixing mode is currently use.
+  * Active mode will pick the oldest track from all decks.  This mode for DJs who are using the
+  the a non-playing deck or will be manually controlling cross-fades.
+  * Passive mode will pick the newest track from all decks.  This mode is useful for pre-built
+  playlists or Serato's AutoDJ mode.
+
+* __Pause/Unpause__ - Determines whether __Now Playing__ is looking for data and writing updated title
+information.
+
+* __Exit__ - Stop and exit __Now Playing__
+
 ### Uninstallation
 
 The process for uninstalling the app is the same on both platforms.  Simply delete the file or folder from the location to where you pasted it.

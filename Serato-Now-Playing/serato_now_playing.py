@@ -46,6 +46,7 @@ __license__ = "MIT"
 # define global variables
 INITIALIZED = PAUSED = False
 CURRENTMETA = {'fetchedartist': None, 'fetchedtitle': None}
+MIXMODE = 'active'
 
 # set paths for bundled files
 if getattr(sys, 'frozen', False) and sys.platform == "darwin":
@@ -574,7 +575,7 @@ to delay writing the new track info once it\'s retrieved. (Default = 0)')
 
     def on_savebutton_clicked(self):
         ''' save button clicked action '''
-        global PAUSED, TRAY
+        global PAUSED, TRAY, MIXMODE
 
         if self.remoteRadio.isChecked():
             if 'https://serato.com/playlists' not in self.urlEdit.text() and \
@@ -604,6 +605,8 @@ to delay writing the new track info once it\'s retrieved. (Default = 0)')
         self.upd_conf()
         self.close()
         self.errLabel.setText('')
+        TRAY.action_mixmode.setText('Active')
+        TRAY.action_mixmode.setEnabled(True)
         TRAY.action_pause.setText('Pause')
         TRAY.action_pause.setEnabled(True)
 
@@ -652,10 +655,20 @@ class Tray:  # create tray icon menu
         self.menu.addAction(self.action_config)
         self.menu.addSeparator()
 
+        self.action_mixmode = QAction()
+        self.action_mixmode.triggered.connect(self.passivemixmode)
+        self.menu.addAction(self.action_mixmode)
+        self.action_mixmode.setEnabled(False)
+
+        self.menu.addSeparator()
+
         self.action_pause = QAction()
         self.action_pause.triggered.connect(self.pause)
         self.menu.addAction(self.action_pause)
         self.action_pause.setEnabled(False)
+
+        self.menu.addSeparator()
+
 
         self.action_exit = QAction("Exit")
         self.action_exit.triggered.connect(self.cleanquit)
@@ -667,8 +680,11 @@ class Tray:  # create tray icon menu
         if not self.conf.file:
             self.settingswindow.show()
         else:
+            self.action_mixmode.setText('Active')
+            self.action_mixmode.setEnabled(True)
             self.action_pause.setText('Pause')
             self.action_pause.setEnabled(True)
+
 
         self.error_dialog = QErrorMessage()
 
@@ -720,6 +736,22 @@ class Tray:  # create tray icon menu
         PAUSED = True
         self.action_pause.setText('Resume')
         self.action_pause.triggered.connect(self.unpause)
+
+    def activemixmode(self):
+        ''' enable active mixing '''
+
+        global MIXMODE
+        MIXMODE = 'active'
+        self.action_mixmode.setText('Active')
+        self.action_mixmode.triggered.connect(self.passivemixmode)
+
+    def passivemixmode(self):
+        ''' enable passive mixing '''
+
+        global MIXMODE
+        MIXMODE = 'passive'
+        self.action_mixmode.setText('Passive')
+        self.action_mixmode.triggered.connect(self.activemixmode)
 
     def cleanquit(self):
         ''' quit app and cleanup '''
@@ -961,7 +993,7 @@ class TrackPoll(QThread):
 
 def gettrack(configuration):  # pylint: disable=too-many-branches
     ''' get currently playing track, returns None if not new or not found '''
-    global PAUSED, CURRENTMETA
+    global CURRENTMETA, PAUSED, MIXMODE
 
     conf = configuration
 
@@ -976,7 +1008,7 @@ def gettrack(configuration):  # pylint: disable=too-many-branches
         hist_dir = os.path.abspath(os.path.join(sera_dir, "History"))
         sess_dir = os.path.abspath(os.path.join(hist_dir, "Sessions"))
         if os.path.isdir(sess_dir):
-            serato = nowplaying.serato.SeratoHandler(seratodir=sess_dir)
+            serato = nowplaying.serato.SeratoHandler(seratodir=sess_dir, mixmode=MIXMODE)
             serato.process_sessions()
 
     else:  # remotely derived

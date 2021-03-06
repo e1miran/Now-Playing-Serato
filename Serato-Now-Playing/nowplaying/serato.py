@@ -15,7 +15,6 @@ import requests
 
 Header = collections.namedtuple('Header', 'chunktype size')
 
-
 class ChunkParser():  #pylint: disable=too-few-public-methods
     ''' Basic Chunk Parser '''
 
@@ -397,16 +396,21 @@ class SeratoHandler():
     lastfetched = None
     mode = None
 
-    def __init__(self, seratodir=None, seratourl=None):
+    def __init__(self, mixmode='active', seratodir=None, seratourl=None):
         if seratodir:
             self.seratodir = seratodir
             self.watchdeck = None
             self.parsedsessions = []
             SeratoHandler.mode = 'local'
+            self.mixmode = mixmode
 
         if seratourl:
             self.url = seratourl
             SeratoHandler.mode = 'remote'
+            self.mixmode = 'active'  # there is only 1 deck so always active
+
+        if self.mixmode not in ['passive', 'active']:
+            self.mixmode = 'active'
 
     def process_sessions(self):
         ''' read and process all of the relevant session files '''
@@ -466,13 +470,12 @@ class SeratoHandler():
 
         SeratoHandler.decks = {}
 
-        # keep track of each deck.
-        # on startup, if deck #1 has not been seen, then
-        # assume that is the active playing song.
-        # when deck #1 changes, assume deck #2 has started
-        # when deck #2 changes, assume deck #1 has started
-        # if deck #1 changes while no deck #2 appears, then
-        # assume deck #1 has started
+        # keep track of each deck. run through
+        # the session files trying to find
+        # the most recent, unplayed track.
+        # it is VERY IMPORTANT to know that
+        # playtime is _ONLY_ set when that deck
+        # has been reloaded!
 
         for index in reversed(self.parsedsessions):
             for adat in index.adats:
@@ -493,14 +496,45 @@ class SeratoHandler():
             return
 
         # at this point, SeratoHandler.decks should have
-        # all decks with their most recent unplayed tracks
+        # all decks with their _most recent_ unplayed tracks
 
-        # The assumption here is that whatever is the oldest
-        # non-played track is currently playing
+        # under most normal operations, we should expect
+        # a round-robin between the decks:
+
+        # mixmode = active, better for a 2+ deck mixing scenario
+        # 1. serato startup
+        # 2. load deck 1   -> title set to deck 1 since only title known
+        # 3. hit play
+        # 4. load deck 2
+        # 5. cross fade
+        # 6. hit play
+        # 7. load deck 1   -> title set to deck 2 since it is now the active
+        # 8. go to #2
+
+        # mixmode = passive, better for 1 deck or using autoplay
+        # 1. serato startup
+        # 2. load deck 1   -> title set to deck 1
+        # 3. play
+        # 4. go to #2
+
+        # it is important to remember that due to the timestamp
+        # checking in process_sessions, active/passive switching
+        # will not effect until the NEXT session file update.
+        # e.g., unless you are changing more than two decks at
+        # once, this behavior should be the expected result
 
         SeratoHandler.playingadat = ChunkTrackADAT()
+
+        if self.mixmode == 'passive':
+            SeratoHandler.playingadat.starttime = datetime.datetime.fromtimestamp(
+                0)
+            SeratoHandler.playingadat.updatedat = SeratoHandler.playingadat.starttime
+
         for deck in SeratoHandler.decks:
-            if SeratoHandler.decks[
+            if self.mixmode == 'passive' and SeratoHandler.decks[
+                    deck].starttime > SeratoHandler.playingadat.starttime:
+                SeratoHandler.playingadat = SeratoHandler.decks[deck]
+            elif self.mixmode == 'active' and SeratoHandler.decks[
                     deck].starttime < SeratoHandler.playingadat.starttime:
                 SeratoHandler.playingadat = SeratoHandler.decks[deck]
 
