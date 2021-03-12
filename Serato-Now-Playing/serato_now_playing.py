@@ -1015,6 +1015,9 @@ def gettrack(configuration):  # pylint: disable=too-many-branches
 
         serato = nowplaying.serato.SeratoHandler(seratourl=conf.url)
 
+    if not serato:
+        return None
+
     (artist, song) = serato.getplayingtrack()
 
     if not artist and not song:
