@@ -7,16 +7,19 @@
 # pylint: disable=too-many-instance-attributes, too-few-public-methods
 # pylint: disable=too-many-lines
 
-import configparser
 import os
 from http.server import HTTPServer, BaseHTTPRequestHandler
+import pathlib
 import socket
 from socketserver import ThreadingMixIn
 import sys
 import time
 import urllib.parse
 
-from PyQt5.QtCore import Qt, QThread, pyqtSignal
+from PyQt5.QtCore import \
+                            pyqtSignal, \
+                            Qt, \
+                            QThread
 from PyQt5.QtWidgets import \
                             QAction, \
                             QApplication, \
@@ -36,6 +39,7 @@ from PyQt5.QtWidgets import \
                             QWidget
 from PyQt5.QtGui import QIcon, QFont
 
+import nowplaying.config
 import nowplaying.serato
 import nowplaying.utils
 
@@ -60,100 +64,13 @@ ICONFILE = os.path.abspath(os.path.join(BUNDLE_DIR, "bin", "icon.ico"))
 
 # print(CONFIG_FILE)
 # create needed object instances
-CONFIG = configparser.ConfigParser()
+CONFIG = nowplaying.config.ConfigFile(bundledir=BUNDLE_DIR)
 QAPP = QApplication([])
+QAPP.setOrganizationName('com.github.whatsplaying')
+QAPP.setApplicationName('WhatsPlaying')
 QAPP.setQuitOnLastWindowClosed(False)
 
 TRAY = None
-
-
-class ConfigFile:
-    ''' read and write to config.ini '''
-    def __init__(self, cparser, cfile):
-        self.cparser = cparser
-        self.cfile = cfile
-
-        try:
-            self.cparser.read(self.cfile)
-            self.cparser.sections()
-
-            try:
-                self.local = CONFIG.getboolean('Settings', 'local')
-            except ValueError:
-                self.local = True
-
-            self.libpath = CONFIG.get('Settings', 'libpath')
-            self.url = CONFIG.get('Settings', 'url')
-            self.file = CONFIG.get('Settings', 'file')
-
-            try:
-                self.httpenabled = CONFIG.getboolean('Settings',
-                                                     'httpenabled',
-                                                     fallback=False)
-            except ValueError:
-                self.httpenabled = False
-
-            try:
-                self.httpport = CONFIG.getint('Settings',
-                                              'httpport',
-                                              fallback=8899)
-            except ValueError:
-                self.httpport = 8899
-
-            self.httpdir = CONFIG.get('Settings',
-                                      'httpdir',
-                                      fallback=os.path.sep + 'tmp')
-
-            self.htmltemplate = CONFIG.get('Settings',
-                                           'htmltemplate',
-                                           fallback=os.path.join(
-                                               BUNDLE_DIR, "templates",
-                                               "basic.htm"))
-
-            self.txttemplate = CONFIG.get('Settings',
-                                          'txttemplate',
-                                          fallback=os.path.join(
-                                              BUNDLE_DIR, "templates",
-                                              "basic.txt"))
-
-            try:
-                self.interval = CONFIG.getfloat('Settings', 'interval')
-            except ValueError:
-                self.interval = float(10)
-
-            try:
-                self.delay = CONFIG.getfloat('Settings', 'delay')
-            except ValueError:
-                self.delay = float(0)
-
-            try:
-                self.notif = CONFIG.getboolean('Settings', 'notif')
-            except ValueError:
-                self.notif = False
-
-        except configparser.NoOptionError:
-            pass
-
-    # pylint: disable=too-many-locals, too-many-arguments
-    def put(self, local, libpath, url, file, txttemplate, httpport, httpdir,
-            httpenabled, htmltemplate, interval, delay, notif):
-        ''' Save the configuration file '''
-        self.cparser.set('Settings', 'local', local)
-        self.cparser.set('Settings', 'libpath', libpath)
-        self.cparser.set('Settings', 'url', url)
-        self.cparser.set('Settings', 'file', file)
-        self.cparser.set('Settings', 'txttemplate', txttemplate)
-        self.cparser.set('Settings', 'httpenabled', str(httpenabled))
-        self.cparser.set('Settings', 'httpport', str(httpport))
-        self.cparser.set('Settings', 'httpdir', httpdir)
-        self.cparser.set('Settings', 'htmltemplate', htmltemplate)
-        self.cparser.set('Settings', 'interval', interval)
-        self.cparser.set('Settings', 'delay', delay)
-        self.cparser.set('Settings', 'notif', str(notif))
-
-        cffh = open(self.cfile, 'w')
-        self.cparser.write(cffh)
-        cffh.close()
 
 
 # settings UI
@@ -161,9 +78,9 @@ class SettingsUI:
     ''' create settings form window '''
 
     # pylint: disable=too-many-statements, invalid-name
-    def __init__(self, conf, conffile, icn):
-        self.conf = conf
-        self.conffile = conffile
+    def __init__(self, icn):
+        global __version__
+
         self.icon = icn
         self.scroll = QScrollArea()
         self.window = QWidget()
@@ -418,24 +335,27 @@ to delay writing the new track info once it\'s retrieved. (Default = 0)')
 
     def upd_win(self):
         ''' update the settings window '''
-        c = ConfigFile(self.conf, self.conffile)
-        if c.local:
+        global CONFIG
+
+        CONFIG.get()
+
+        if CONFIG.local:
             self.localRadio.setChecked(True)
             self.remoteRadio.setChecked(False)
         else:
             self.localRadio.setChecked(False)
             self.remoteRadio.setChecked(True)
-        self.libEdit.setText(c.libpath)
-        self.urlEdit.setText(c.url)
-        self.fileEdit.setText(c.file)
-        self.txttemplateEdit.setText(c.txttemplate)
-        self.httpenabledCbox.setChecked(c.httpenabled)
-        self.httpportEdit.setText(str(c.httpport))
-        self.httpdirEdit.setText(c.httpdir)
-        self.htmltemplateEdit.setText(c.htmltemplate)
-        self.intervalEdit.setText(str(c.interval))
-        self.delayEdit.setText(str(c.delay))
-        self.notifCbox.setChecked(c.notif)
+        self.libEdit.setText(CONFIG.libpath)
+        self.urlEdit.setText(CONFIG.url)
+        self.fileEdit.setText(CONFIG.file)
+        self.txttemplateEdit.setText(CONFIG.txttemplate)
+        self.httpenabledCbox.setChecked(CONFIG.httpenabled)
+        self.httpportEdit.setText(str(CONFIG.httpport))
+        self.httpdirEdit.setText(CONFIG.httpdir)
+        self.htmltemplateEdit.setText(CONFIG.htmltemplate)
+        self.intervalEdit.setText(str(CONFIG.interval))
+        self.delayEdit.setText(str(CONFIG.delay))
+        self.notifCbox.setChecked(CONFIG.notif)
 
     def disable_web(self):
         ''' if the web server gets in trouble, this gets called '''
@@ -448,6 +368,9 @@ to delay writing the new track info once it\'s retrieved. (Default = 0)')
     # pylint: disable=too-many-locals
     def upd_conf(self):
         ''' update the configuration '''
+
+        global CONFIG
+
         local = str(self.localRadio.isChecked())
         libpath = self.libEdit.text()
         url = self.urlEdit.text()
@@ -461,19 +384,18 @@ to delay writing the new track info once it\'s retrieved. (Default = 0)')
         delay = self.delayEdit.text()
         notif = self.notifCbox.isChecked()
 
-        conf = ConfigFile(self.conf, self.conffile)
-        conf.put(local=local,
-                 libpath=libpath,
-                 url=url,
-                 file=file,
-                 txttemplate=txttemplate,
-                 httpport=httpport,
-                 httpdir=httpdir,
-                 httpenabled=httpenabled,
-                 htmltemplate=htmltemplate,
-                 interval=interval,
-                 delay=delay,
-                 notif=notif)
+        CONFIG.put(local=local,
+                   libpath=libpath,
+                   url=url,
+                   file=file,
+                   txttemplate=txttemplate,
+                   httpport=httpport,
+                   httpdir=httpdir,
+                   httpenabled=httpenabled,
+                   htmltemplate=htmltemplate,
+                   interval=interval,
+                   delay=delay,
+                   notif=notif)
 
     def on_radiobutton_select(self, b):
         ''' radio button action '''
@@ -513,18 +435,20 @@ to delay writing the new track info once it\'s retrieved. (Default = 0)')
             startdir = os.path.dirname(startfile)
         else:
             startdir = '.'
-        filename = QFileDialog.getOpenFileName(self.window, 'Open file',
+        filename = QFileDialog.getSaveFileName(self.window, 'Open file',
                                                startdir, '*.txt')
         if filename:
             self.fileEdit.setText(filename[0])
 
     def on_txttemplatebutton_clicked(self):
         ''' file button clicked action '''
+        global BUNDLE_DIR
+
         startfile = self.txttemplateEdit.text()
         if startfile:
             startdir = os.path.dirname(startfile)
         else:
-            startdir = '.'
+            startdir = os.path.join(BUNDLE_DIR, "templates")
         filename = QFileDialog.getOpenFileName(self.window, 'Open file',
                                                startdir, '*.txt')
         if filename:
@@ -532,9 +456,9 @@ to delay writing the new track info once it\'s retrieved. (Default = 0)')
 
     def on_libbutton_clicked(self):
         ''' lib button clicked action'''
-        startdir = self.httpdirEdit.text()
+        startdir = self.libEdit.text()
         if not startdir:
-            startdir = '.'
+            startdir = str(pathlib.Path.home())
         libdir = QFileDialog.getExistingDirectory(self.window,
                                                   'Select directory', startdir)
         if libdir:
@@ -544,7 +468,7 @@ to delay writing the new track info once it\'s retrieved. (Default = 0)')
         ''' file button clicked action '''
         startdir = self.httpdirEdit.text()
         if not startdir:
-            startdir = '.'
+            startdir = str(pathlib.Path.home())
         dirname = QFileDialog.getExistingDirectory(self.window,
                                                    'Select directory',
                                                    startdir)
@@ -553,11 +477,13 @@ to delay writing the new track info once it\'s retrieved. (Default = 0)')
 
     def on_htmltemplatebutton_clicked(self):
         ''' file button clicked action '''
+        global BUNDLE_DIR
+
         startfile = self.htmltemplateEdit.text()
         if startfile:
             startdir = os.path.dirname(startfile)
         else:
-            startdir = '.'
+            startdir = os.path.join(BUNDLE_DIR, "templates")
         filename = QFileDialog.getOpenFileName(self.window, 'Open file',
                                                startdir, '*.htm *.html')
         if filename:
@@ -605,7 +531,7 @@ to delay writing the new track info once it\'s retrieved. (Default = 0)')
         self.upd_conf()
         self.close()
         self.errLabel.setText('')
-        TRAY.action_mixmode.setText('Active')
+        TRAY.action_mixmode.setText('Using: Oldest')
         TRAY.action_mixmode.setEnabled(True)
         TRAY.action_pause.setText('Pause')
         TRAY.action_pause.setEnabled(True)
@@ -635,8 +561,9 @@ class Tray:  # create tray icon menu
     ''' System Tray object '''
     def __init__(self):
 
-        self.settingswindow = SettingsUI(CONFIG, CONFIG_FILE, ICONFILE)
-        self.conf = ConfigFile(CONFIG, CONFIG_FILE)
+        global __version__, ICONFILE, CONFIG
+
+        self.settingswindow = SettingsUI(ICONFILE)
         ''' create systemtray UI '''
         self.icon = QIcon(ICONFILE)
         self.tray = QSystemTrayIcon()
@@ -669,7 +596,6 @@ class Tray:  # create tray icon menu
 
         self.menu.addSeparator()
 
-
         self.action_exit = QAction("Exit")
         self.action_exit.triggered.connect(self.cleanquit)
         self.menu.addAction(self.action_exit)
@@ -677,14 +603,13 @@ class Tray:  # create tray icon menu
         # add menu to the systemtray UI
         self.tray.setContextMenu(self.menu)
 
-        if not self.conf.file:
+        if not CONFIG.file:
             self.settingswindow.show()
         else:
             self.action_mixmode.setText('Active')
             self.action_mixmode.setEnabled(True)
             self.action_pause.setText('Pause')
             self.action_pause.setEnabled(True)
-
 
         self.error_dialog = QErrorMessage()
 
@@ -700,7 +625,9 @@ class Tray:  # create tray icon menu
 
     def tracknotify(self, metadata):
         ''' signal handler to update the tooltip '''
-        if self.conf.notif:
+        global CONFIG
+
+        if CONFIG.notif:
             if 'artist' in metadata:
                 artist = metadata['artist']
             else:
@@ -742,7 +669,7 @@ class Tray:  # create tray icon menu
 
         global MIXMODE
         MIXMODE = 'active'
-        self.action_mixmode.setText('Active')
+        self.action_mixmode.setText('Using: Oldest')
         self.action_mixmode.triggered.connect(self.passivemixmode)
 
     def passivemixmode(self):
@@ -750,15 +677,18 @@ class Tray:  # create tray icon menu
 
         global MIXMODE
         MIXMODE = 'passive'
-        self.action_mixmode.setText('Passive')
+        self.action_mixmode.setText('Using: Newest')
         self.action_mixmode.triggered.connect(self.activemixmode)
 
     def cleanquit(self):
         ''' quit app and cleanup '''
+
+        global CONFIG
+
         self.tray.setVisible(False)
-        file = ConfigFile(CONFIG, CONFIG_FILE).file
-        if file:
-            nowplaying.utils.writetxttrack(filename=file)
+
+        if CONFIG.file:
+            nowplaying.utils.writetxttrack(filename=CONFIG.file)
         # calling exit should call __del__ on all of our QThreads
         QAPP.exit(0)
         sys.exit(0)
@@ -862,12 +792,11 @@ class WebServer(QThread):
             to a halt by triggering pause.
 
         '''
-        global CONFIG, CONFIG_FILE, PAUSED
+        global CONFIG, PAUSED
 
-        conf = ConfigFile(CONFIG, CONFIG_FILE)
-        while not conf.httpenabled and not self.endthread:
+        while not CONFIG.httpenabled and not self.endthread:
             time.sleep(5)
-            conf = ConfigFile(CONFIG, CONFIG_FILE)
+            CONFIG.get()
 
         while not self.endthread:
             while PAUSED:
@@ -875,17 +804,24 @@ class WebServer(QThread):
 
             resetserver = False
             time.sleep(1)
-            conf = ConfigFile(CONFIG, CONFIG_FILE)
 
-            if conf.httpdir != self.prevdir:
-                os.chdir(conf.httpdir)
-                self.prevdir = conf.httpdir
+            if CONFIG.httpdir != self.prevdir:
+                if not os.path.exists(CONFIG.httpdir):
+                    try:
+                        pathlib.Path(CONFIG.httpdir).mkdir(parents=True,
+                                                           exist_ok=True)
+                    except Exception as error:  # pylint: disable=broad-except
+                        print(f'webserver error: {error}')
+                        self.webenable.emit(False)
+
+                os.chdir(CONFIG.httpdir)
+                self.prevdir = CONFIG.httpdir
                 resetserver = True
 
-            if conf.httpport != self.prevport:
-                self.prevport = conf.httpport
+            if CONFIG.httpport != self.prevport:
+                self.prevport = CONFIG.httpport
 
-            if not conf.httpenabled:
+            if not CONFIG.httpenabled:
                 self.stop()
                 continue
 
@@ -896,7 +832,7 @@ class WebServer(QThread):
             if not self.server:
                 try:
                     self.server = ThreadingWebServer(
-                        ('0.0.0.0', conf.httpport), WebHandler)
+                        ('0.0.0.0', CONFIG.httpport), WebHandler)
                 except Exception as error:  # pylint: disable=broad-except
                     print(f'webserver error: {error}')
                     self.webenable.emit(False)
@@ -937,49 +873,49 @@ class TrackPoll(QThread):
     def run(self):
         ''' track polling process '''
 
-        global CONFIG, CONFIG_FILE
+        global CONFIG
 
         previoustxttemplate = None
         previoushtmltemplate = None
 
         # sleep until we have something to write
-        conf = ConfigFile(CONFIG, CONFIG_FILE)
-        while not conf.file and not self.endthread:
+        while not CONFIG.file and not self.endthread:
             time.sleep(5)
-            conf = ConfigFile(CONFIG, CONFIG_FILE)
+            CONFIG.get()
 
         while not self.endthread:
-            conf = ConfigFile(CONFIG, CONFIG_FILE)
 
-            if not previoustxttemplate or previoustxttemplate != conf.txttemplate:
+            CONFIG.get()
+
+            if not previoustxttemplate or previoustxttemplate != CONFIG.txttemplate:
                 txttemplatehandler = nowplaying.utils.TemplateHandler(
-                    filename=conf.txttemplate)
-                previoustxttemplate = conf.txttemplate
+                    filename=CONFIG.txttemplate)
+                previoustxttemplate = CONFIG.txttemplate
 
             # get poll interval and then poll
-            if conf.local:
+            if CONFIG.local:
                 interval = 1
             else:
-                interval = conf.interval
+                interval = CONFIG.interval
 
             time.sleep(interval)
-            newmeta = gettrack(ConfigFile(CONFIG, CONFIG_FILE))
+            newmeta = gettrack(CONFIG)
             if not newmeta:
                 continue
-            time.sleep(conf.delay)
-            nowplaying.utils.writetxttrack(filename=conf.file,
+            time.sleep(CONFIG.delay)
+            nowplaying.utils.writetxttrack(filename=CONFIG.file,
                                            templatehandler=txttemplatehandler,
                                            metadata=newmeta)
             self.currenttrack.emit(newmeta)
-            if conf.httpenabled:
+            if CONFIG.httpenabled:
 
-                if not previoushtmltemplate or previoushtmltemplate != conf.htmltemplate:
+                if not previoushtmltemplate or previoushtmltemplate != CONFIG.htmltemplate:
                     htmltemplatehandler = nowplaying.utils.TemplateHandler(
-                        filename=conf.htmltemplate)
-                    previoushtmltemplate = conf.htmltemplate
+                        filename=CONFIG.htmltemplate)
+                    previoushtmltemplate = CONFIG.htmltemplate
 
                 nowplaying.utils.update_javascript(
-                    serverdir=conf.httpdir,
+                    serverdir=CONFIG.httpdir,
                     templatehandler=htmltemplatehandler,
                     metadata=newmeta)
 
@@ -997,6 +933,8 @@ def gettrack(configuration):  # pylint: disable=too-many-branches
 
     conf = configuration
 
+    serato = None
+
     # check paused state
     while True:
         if not PAUSED:
@@ -1008,7 +946,8 @@ def gettrack(configuration):  # pylint: disable=too-many-branches
         hist_dir = os.path.abspath(os.path.join(sera_dir, "History"))
         sess_dir = os.path.abspath(os.path.join(hist_dir, "Sessions"))
         if os.path.isdir(sess_dir):
-            serato = nowplaying.serato.SeratoHandler(seratodir=sess_dir, mixmode=MIXMODE)
+            serato = nowplaying.serato.SeratoHandler(seratodir=sess_dir,
+                                                     mixmode=MIXMODE)
             serato.process_sessions()
 
     else:  # remotely derived
