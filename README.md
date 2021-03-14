@@ -2,31 +2,19 @@
 
 # __Now Playing__ in Serato ![Menu Bar Image](https://github.com/e1miran/Now-Playing-Serato/blob/master/git-images/seratoPlaying.png?raw=true)
 
-__Now Playing__ is a tool written in Python to retrieve the current/last played song in Serato DJ.
+__Now Playing__ is a tool written in Python to retrieve the current/last played song in Serato DJ
+(as tested with v2.4.x).
 
-Starting with the version 1.3.0, __Now Playing__ retrieves the current track from Serato's local history log and writes it to a plain text file which can be fed to streaming services and apps like OBS Studio.
+Compiled, standalone versions are available for:
 
-Previous versions of __Now Playing__ could only use a remote method of retrieving song data by leveraging the Serato Live Playlists functionality and scraping the data from the user's Live page on the Serato website. This legacy method remains an option for when the user requires streaming from a PC that is not the same on which Serato is running.
+* Windows
+* macOS (10.13/High Sierra to 10.15/Catalina)
+  * We do not yet have binaries for 10.11/Big Sur or M1.
+  * [*__IMPORTANT__ note for macOS users*](#important-note-for-macos-users).
 
-It runs on the latest versions of Windows and macOS (High Sierra and newer).
-[*__IMPORTANT__ note for macOS users*](#important-note-for-macos-users)
+## Changes from previous versions
 
-## Changelog
-
-### New in version 1.4.0
-
-* Fix for issue where Settings UI window did not fit on smaller resolution screens.
-    The window is now re-sizeable and scrolling is enabled.
-* Augmented the suffix and prefix functionality. The Artist and Song data chunks now
-    can have independent suffixes and prefixes.
-* Added version number to Settings window title bar.
-
-### New in version 1.3.0
-
-* Added ability to read latest track info from Serato library history log. User now can choose  between local or remote (Serato Live Playlists) polling methods.
-* Fix for issue where app would not launch on Windows due to not being able to create config.ini.
-* Changed polling method for increased efficiency.
-* Other enhancements due to new code and functionality.
+See the [CHANGELOG](CHANGELOG) file.
 
 ## Considerations and Pre-requisites
 
