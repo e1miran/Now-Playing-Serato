@@ -93,7 +93,7 @@ def writetxttrack(filename=None, templatehandler=None, metadata=None):
         txttemplate = '{{ artist }} - {{ title }}'
 
     with open(filename, "w") as textfh:
-        print("writing...")
+        #print("writing...")
         textfh.write(txttemplate)
 
 

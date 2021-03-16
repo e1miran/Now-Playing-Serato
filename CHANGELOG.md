@@ -4,14 +4,21 @@
 ## Version 1.5.0 - Unreleased
 
 * Fixed licensing
-* New HTTP Server built for video users who need fade-in/fade-out and other effects
+* New HTTP Server built for users who need fade-in/fade-out and other effects
 * Rewritten local mode:
   * Cover art in HTTP mode
   * Better character encoding for non-Latin titles
-  * Active and Passive Mixing mode for picking the oldest or newest deck
+  * Oldest and Newest modes for picking the oldest or newest deck
   * Significantly more data available
 * Templated output instead of hard-coded output settings
-* Many bug fixes
+* Configuration system has been completely revamped.
+  * Settings will now survive between software upgrades.
+  * Added a 'Reset' button to get you back to defaults.
+  * They are now stored in system-friendly ways (e.g., Library/Preferences
+    in OS X).
+  * Defaults are much more likely to be correct for your system.
+* Major internal, structural changes to allow for easier ability to add new features.
+* Many, many bug fixes... but probably new ones added too.
 
 ## Version 1.4.0 - 2020-10-21
 

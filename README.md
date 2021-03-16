@@ -14,7 +14,7 @@ Compiled, standalone versions are available for:
 
 ## Changes from previous versions
 
-See the [CHANGELOG](CHANGELOG) file.
+See the [CHANGELOG](CHANGELOG.md) file.
 
 ## Considerations and Pre-requisites
 
@@ -33,20 +33,28 @@ For more info on Serato Live Playlists: https://support.serato.com/hc/en-us/arti
 
 * Download the latest macOS release zip package here: https://github.com/e1miran/Now-Playing-Serato/releases/latest
 * Unzip the package and place the unzipped 'SeratoNowPlaying.app' file in your "Applications" folder or any other location that you desire.
-* Create a new, blank text file with the TextEdit app or similar text editor. Name it as you please, and save this text file anywhere you like on your mac and close the text editor.
 
 #### *Important note for macOS users*
 
-Due to security measures in macOS Sierra and later, apps downloaded from outside of the Mac App Store that are unsigned may have limitations placed on them that will prevent them from operating correctly, or even opening at all. The app has been verified to open on High Sierra and newer versions of macOS by following the steps below. Versions prior to High Sierra have not been verified and are not currently supported.
+Due to security measures in macOS Sierra and later, apps downloaded from outside
+of the Mac App Store that are unsigned may have limitations placed on them that
+will prevent them from operating correctly, or even opening at all. The app has
+been verified to open on High Sierra and newer versions of macOS by following the
+steps below. Versions prior to High Sierra have not been verified and are not currently supported.
 
-* Do not unzip the downloaded zip package directly to the folder from where you will be running it. Instead unzip it in a location such as the "Downloads" folder and then move the 'SeratoNowPlaying.app' to your destination folder (e.g., "Applications"). Then run the app from the destination folder.
-* If after following the step above the app does not open, or you tried running it before moving the app, open Terminal and type: ```sudo xattr -r -d com.apple.quarantine /path/to/MyApp.app``` (replace with the correct path to the app).
+* Do not unzip the downloaded zip package directly to the folder from where you
+  will be running it. Instead unzip it in a location such as the "Downloads" folder
+  and then move the 'SeratoNowPlaying.app' to your destination folder (e.g.,
+  "Applications"). Then run the app from the destination folder.
+* If after following the step above the app does not open, or you tried running it before
+  moving the app, open Terminal and type:
+  ```sudo xattr -r -d com.apple.quarantine /path/to/MyApp.app``` (replace with the correct path to the app).
 
 ### Windows
 
 * Download the latest Windows release zip package here: https://github.com/e1miran/Now-Playing-Serato/releases/latest
-* Unzip the package and copy the entire unzipped folder containing the 'SeratoNowPlaying.exe' file and supporting files to the directory you'd like the app to run from (i.e.: C:\Program Files).
-* Create a new, blank text file with the Notepad app or similar text editor. Name it as you please, and save this text file anywhere you like on your pc and close the text editor.
+* Unzip the package and copy the entire unzipped folder containing the
+  'SeratoNowPlaying.exe' file and supporting files to the directory you'd like the app to run from (i.e.: C:\Program Files).
 
 ## Usage
 
@@ -67,10 +75,10 @@ tray on Windows or the menu bar icon on macOS.
 * __Settings__ - Reconfigure the application after going through the initial configuration.
 See [Settings](#settings) for more information.
 
-* __Active/Passive__ - Toggle that determines which mixing mode is currently use.
-  * Active mode will pick the oldest track from all decks.  This mode for DJs who are using the
+* __Oldest/Newest__ - Toggle that determines which mixing mode is currently use.
+  * Oldest mode will pick the oldest track from all decks.  This mode for DJs who are using the
   the a non-playing deck or will be manually controlling cross-fades.
-  * Passive mode will pick the newest track from all decks.  This mode is useful for pre-built
+  * Newest mode will pick the newest track from all decks.  This mode is useful for pre-built
   playlists or Serato's AutoDJ mode.
 
 * __Pause/Unpause__ - Determines whether __Now Playing__ is looking for data and writing updated title
@@ -104,7 +112,7 @@ Upon initial execution of the app, a settings window will appear. Subsequently, 
   * This is useful for verifying that the app is actually polling and retrieving data.
   * The track info will be displayed in the notification.
 
-* __File__ - This is the file to which the current track info is written
+* __File__ - This is the file to which the current track info is written.  You can either pick a pre-existing file or the name of a new file.
 
 * __TXT Template__ - The [Jinja2 template](https://jinja.palletsprojects.com/en/2.11.x/templates/) file that will be used when the song has been updated. See [More on Template Files](#more-on-template-files) below.
 
@@ -118,7 +126,8 @@ this port should be protected by a firewall to limit which hosts will be permitt
 
 * __HTML Template__ - The [Jinja2 template](https://jinja.palletsprojects.com/en/2.11.x/templates/) file that will be used when the song has been updated. See [More on Template Files](#more-on-template-files) below.
 
-* __Server Path__ - Directory to be used to store the web server index file that is created after processing the template.
+* __Server Path__ - Directory to be used to store the web server index file that is created after processing the template.  If this
+field is kept blank, the system temporary directory will be used.
 
 ### Local Mode
 
@@ -178,7 +187,7 @@ CSS, JavaScript libraries, etc) must come from another source.
 ## More on Template Files
 
 In order to provide maximum formatting flexibility, [Jinja2 template](https://jinja.palletsprojects.com/en/2.11.x/templates/)
-files are used to format the output.  __Now Playing__ provides several example templates that may be modified as necessary
+files are used to format the output.  __Now Playing__ provides several built-in example templates that may be modified as necessary
 to suit your needs.  Be aware that some information provided to the templating engine is only available when run in Local
 Mode and only if your songs and videos have the proper IDv3 or equivalent tags in them.  A tool such as
 [Musicbrainz Picard](https://picard.musicbrainz.org/) is recommended to fill in as much information as possible as easily
