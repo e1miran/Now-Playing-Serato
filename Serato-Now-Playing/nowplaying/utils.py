@@ -92,7 +92,9 @@ def writetxttrack(filename=None, templatehandler=None, metadata=None):
     else:
         txttemplate = '{{ artist }} - {{ title }}'
 
-    with open(filename, "w") as textfh:
+    # need to -specifically- open as utf-8 otherwise
+    # pyinstaller built app crashes
+    with open(filename, "w", encoding='utf-8') as textfh:
         #print("writing...")
         textfh.write(txttemplate)
 
@@ -110,7 +112,10 @@ def update_javascript(serverdir='/tmp', templatehandler=None, metadata=None):
         return
 
     titlecardhtml = templatehandler.generate(metadata)
-    with open(indexhtm, "w") as indexfh:
+
+    # need to -specifically- open as utf-8 otherwise
+    # pyinstaller built app crashes
+    with open(indexhtm, "w", encoding='utf-8') as indexfh:
         indexfh.write(titlecardhtml)
 
     if 'coverimageraw' in metadata:
