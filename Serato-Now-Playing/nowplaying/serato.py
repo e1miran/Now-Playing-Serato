@@ -397,7 +397,7 @@ class SeratoHandler():
     lastfetched = None
     mode = None
 
-    def __init__(self, mixmode='active', seratodir=None, seratourl=None):
+    def __init__(self, mixmode='oldest', seratodir=None, seratourl=None):
         if seratodir:
             self.seratodir = seratodir
             self.watchdeck = None
@@ -408,10 +408,10 @@ class SeratoHandler():
         if seratourl:
             self.url = seratourl
             SeratoHandler.mode = 'remote'
-            self.mixmode = 'active'  # there is only 1 deck so always active
+            self.mixmode = 'oldest'  # there is only 1 deck so always newest
 
-        if self.mixmode not in ['passive', 'active']:
-            self.mixmode = 'active'
+        if self.mixmode not in ['newest', 'oldest']:
+            self.mixmode = 'newest'
 
     def process_sessions(self):
         ''' read and process all of the relevant session files '''
@@ -502,40 +502,40 @@ class SeratoHandler():
         # under most normal operations, we should expect
         # a round-robin between the decks:
 
-        # mixmode = active, better for a 2+ deck mixing scenario
+        # mixmode = oldest, better for a 2+ deck mixing scenario
         # 1. serato startup
         # 2. load deck 1   -> title set to deck 1 since only title known
         # 3. hit play
         # 4. load deck 2
         # 5. cross fade
         # 6. hit play
-        # 7. load deck 1   -> title set to deck 2 since it is now the active
+        # 7. load deck 1   -> title set to deck 2 since it is now the oldest
         # 8. go to #2
 
-        # mixmode = passive, better for 1 deck or using autoplay
+        # mixmode = newest, better for 1 deck or using autoplay
         # 1. serato startup
         # 2. load deck 1   -> title set to deck 1
         # 3. play
         # 4. go to #2
 
         # it is important to remember that due to the timestamp
-        # checking in process_sessions, active/passive switching
+        # checking in process_sessions, oldest/newest switching
         # will not effect until the NEXT session file update.
         # e.g., unless you are changing more than two decks at
         # once, this behavior should be the expected result
 
         SeratoHandler.playingadat = ChunkTrackADAT()
 
-        if self.mixmode == 'passive':
+        if self.mixmode == 'newest':
             SeratoHandler.playingadat.starttime = datetime.datetime.fromtimestamp(
                 0)
             SeratoHandler.playingadat.updatedat = SeratoHandler.playingadat.starttime
 
         for deck in SeratoHandler.decks:
-            if self.mixmode == 'passive' and SeratoHandler.decks[
+            if self.mixmode == 'newest' and SeratoHandler.decks[
                     deck].starttime > SeratoHandler.playingadat.starttime:
                 SeratoHandler.playingadat = SeratoHandler.decks[deck]
-            elif self.mixmode == 'active' and SeratoHandler.decks[
+            elif self.mixmode == 'oldest' and SeratoHandler.decks[
                     deck].starttime < SeratoHandler.playingadat.starttime:
                 SeratoHandler.playingadat = SeratoHandler.decks[deck]
 

@@ -3,14 +3,13 @@
     Titles for streaming for Serato
 '''
 
-# pylint: disable=no-name-in-module, global-statement
-# pylint: disable=too-many-instance-attributes, too-few-public-methods
-# pylint: disable=too-many-lines
+# pylint: disable=no-name-in-module
+# pylint: disable=global-statement
+# pylint: disable=too-few-public-methods
 
 import os
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import pathlib
-import socket
 from socketserver import ThreadingMixIn
 import sys
 import tempfile
@@ -19,27 +18,16 @@ import urllib.parse
 
 from PyQt5.QtCore import \
                             pyqtSignal, \
-                            Qt, \
                             QThread
 from PyQt5.QtWidgets import \
                             QAction, \
                             QApplication, \
-                            QCheckBox, \
                             QErrorMessage, \
-                            QFileDialog, \
-                            QFrame, \
-                            QHBoxLayout, \
-                            QLabel, \
-                            QLineEdit, \
                             QMenu, \
-                            QPushButton, \
-                            QRadioButton, \
-                            QScrollArea,\
-                            QSystemTrayIcon,\
-                            QVBoxLayout, \
-                            QWidget
-from PyQt5.QtGui import QIcon, QFont
+                            QSystemTrayIcon
+from PyQt5.QtGui import QIcon
 
+import nowplaying.settingsui
 import nowplaying.config
 import nowplaying.serato
 import nowplaying.utils
@@ -48,21 +36,17 @@ __author__ = "Ely Miranda"
 __version__ = "1.5.0"
 __license__ = "MIT"
 
-# define global variables
-PAUSED = False
-CURRENTMETA = {'fetchedartist': None, 'fetchedtitle': None}
-MIXMODE = 'active'
-
 # set paths for bundled files
 if getattr(sys, 'frozen', False) and sys.platform == "darwin":
-    BUNDLE_DIR = os.path.abspath(os.path.dirname(
+    BUNDLEDIR = os.path.abspath(os.path.dirname(
         sys.executable))  # sys._MEIPASS
 else:
-    BUNDLE_DIR = os.path.abspath(os.path.dirname(__file__))
+    BUNDLEDIR = os.path.abspath(os.path.dirname(__file__))
 
-ICONFILE = os.path.abspath(os.path.join(BUNDLE_DIR, "bin", "icon.ico"))
+# define global variables
+CURRENTMETA = {'fetchedartist': None, 'fetchedtitle': None}
 
-CONFIG = nowplaying.config.ConfigFile(bundledir=BUNDLE_DIR)
+CONFIG = nowplaying.config.ConfigFile(bundledir=BUNDLEDIR)
 QAPP = QApplication([])
 QAPP.setOrganizationName('com.github.em1ran')
 QAPP.setApplicationName('NowPlaying')
@@ -71,520 +55,16 @@ QAPP.setQuitOnLastWindowClosed(False)
 TRAY = None
 
 
-# settings UI
-class SettingsUI:
-    ''' create settings form window '''
-
-    # pylint: disable=too-many-statements, invalid-name
-    def __init__(self, icn):
-        global __version__
-
-        self.icon = icn
-        self.scroll = QScrollArea()
-        self.window = QWidget()
-        self.separator1 = QFrame()
-        self.separator2 = QFrame()
-        self.separator3 = QFrame()
-        self.scroll.setWindowIcon(QIcon(icn))
-        self.layoutV = QVBoxLayout()
-        self.layoutH0 = QHBoxLayout()
-        self.layoutH0a = QHBoxLayout()
-        self.layoutH1 = QHBoxLayout()
-        self.layoutTxtTemplate = QHBoxLayout()
-        self.layoutH4 = QHBoxLayout()
-        self.layoutH5 = QHBoxLayout()
-        self.layoutHttpEnableCheckbox = QHBoxLayout()
-        self.layoutHttpPort = QHBoxLayout()
-        self.layoutHttpHtmlTemplate = QHBoxLayout()
-        self.layoutHttpServerPath = QHBoxLayout()
-
-        self.fBold = QFont()
-        self.fBold.setBold(True)
-        self.scroll.setWindowTitle(f'Now Playing v{__version__} - Settings')
-
-        self.scroll.setWidgetResizable(True)
-        self.scroll.setWindowFlag(Qt.CustomizeWindowHint, True)
-        self.scroll.setWindowFlag(Qt.WindowCloseButtonHint, False)
-        # self.scroll.setWindowFlag(Qt.WindowMinMaxButtonsHint, False)
-        self.scroll.setWindowFlag(Qt.WindowMinimizeButtonHint, False)
-        self.scroll.setWidget(self.window)
-        self.scroll.setMinimumWidth(700)
-        self.scroll.resize(700, 825)
-
-        # error section
-        self.errLabel = QLabel()
-        self.errLabel.setStyleSheet('color: red')
-        # remote
-        self.localLabel = QLabel('Track Retrieval Mode')
-        self.localLabel.setFont(self.fBold)
-        self.layoutV.addWidget(self.localLabel)
-        self.remoteDesc = QLabel(
-            'Local mode (default) uses Serato\'s local history log for track data.\
-\nRemote mode retrieves remote track data from Serato Live Playlists.')
-        self.remoteDesc.setStyleSheet('color: grey')
-        self.layoutV.addWidget(self.remoteDesc)
-        # radios
-        self.localRadio = QRadioButton('Local')
-        self.localRadio.setChecked(True)
-        self.localRadio.toggled.connect(
-            lambda: self.on_radiobutton_select(self.localRadio))
-        self.localRadio.setMaximumWidth(60)
-
-        self.remoteRadio = QRadioButton('Remote')
-        self.remoteRadio.toggled.connect(
-            lambda: self.on_radiobutton_select(self.remoteRadio))
-        self.layoutH0.addWidget(self.localRadio)
-        self.layoutH0.addWidget(self.remoteRadio)
-        self.layoutV.addLayout(self.layoutH0)
-
-        # library path
-        self.libLabel = QLabel('Serato Library Path')
-        self.libLabel.setFont(self.fBold)
-        self.libDesc = QLabel(
-            'Location of Serato library folder.\ni.e., \\THE_PATH_TO\\_Serato_'
-        )
-        self.libDesc.setStyleSheet('color: grey')
-        self.layoutV.addWidget(self.libLabel)
-        self.layoutV.addWidget(self.libDesc)
-        self.libButton = QPushButton('Browse for folder')
-        self.layoutH0a.addWidget(self.libButton)
-        self.libButton.clicked.connect(self.on_libbutton_clicked)
-        self.libEdit = QLineEdit()
-        self.layoutH0a.addWidget(self.libEdit)
-        self.layoutV.addLayout(self.layoutH0a)
-        # url
-        self.urlLabel = QLabel('URL')
-        self.urlLabel.setFont(self.fBold)
-        self.urlDesc = QLabel(
-            'Web address of your Serato Playlist.\ne.g., https://serato.com/playlists/USERNAME/live'
-        )
-        self.urlDesc.setStyleSheet('color: grey')
-        self.layoutV.addWidget(self.urlLabel)
-        self.urlEdit = QLineEdit()
-        self.layoutV.addWidget(self.urlDesc)
-        self.layoutV.addWidget(self.urlEdit)
-        self.urlLabel.setHidden(True)
-        self.urlEdit.setHidden(True)
-        self.urlDesc.setHidden(True)
-        # separator line
-        self.separator1.setFrameShape(QFrame.HLine)
-        # self.separator.setFrameShadow(QFrame.Sunken)
-        self.layoutV.addWidget(self.separator1)
-
-        # interval
-        self.intervalLabel = QLabel('Polling Interval')
-        self.intervalLabel.setFont(self.fBold)
-        self.intervalDesc = QLabel('Amount of time, in seconds, \
-that must elapse before checking for new track info. (Default = 10.0)')
-        self.intervalDesc.setStyleSheet('color: grey')
-        self.layoutV.addWidget(self.intervalLabel)
-        self.layoutV.addWidget(self.intervalDesc)
-        self.intervalEdit = QLineEdit()
-        self.intervalEdit.setMaximumSize(40, 35)
-        self.layoutV.addWidget(self.intervalEdit)
-        self.intervalLabel.setHidden(True)
-        self.intervalDesc.setHidden(True)
-        self.intervalEdit.setHidden(True)
-
-        # notify
-        self.notifLabel = QLabel('Notification Indicator')
-        self.notifLabel.setFont(self.fBold)
-        self.layoutV.addWidget(self.notifLabel)
-        self.notifCbox = QCheckBox()
-        self.notifCbox.setMaximumWidth(25)
-        self.layoutH5.addWidget(self.notifCbox)
-        self.notifDesc = QLabel('Show OS system notification \
-when new song is retrieved.')
-        self.notifDesc.setStyleSheet('color: grey')
-        self.layoutH5.addWidget(self.notifDesc)
-        self.layoutV.addLayout(self.layoutH5)
-
-        # separator line
-        self.separator2.setFrameShape(QFrame.HLine)
-        # self.separator.setFrameShadow(QFrame.Sunken)
-        self.layoutV.addWidget(self.separator2)
-
-        # file
-        self.fileLabel = QLabel('File')
-        self.fileLabel.setFont(self.fBold)
-        self.fileDesc = QLabel(
-            'The file to which current track info is written. (Must be plain text: .txt)'
-        )
-        self.fileDesc.setStyleSheet('color: grey')
-        self.layoutV.addWidget(self.fileLabel)
-        self.layoutV.addWidget(self.fileDesc)
-        self.fileButton = QPushButton('Browse for file')
-        self.layoutH1.addWidget(self.fileButton)
-        self.fileButton.clicked.connect(self.on_filebutton_clicked)
-        self.fileEdit = QLineEdit()
-        self.layoutH1.addWidget(self.fileEdit)
-        self.layoutV.addLayout(self.layoutH1)
-
-        self.txttemplateLabel = QLabel('TXT Template')
-        self.txttemplateLabel.setFont(self.fBold)
-        self.txttemplateDesc = QLabel('Template file for text output')
-        self.txttemplateDesc.setStyleSheet('color: grey')
-        self.layoutV.addWidget(self.txttemplateLabel)
-        self.layoutV.addWidget(self.txttemplateDesc)
-        self.txttemplateButton = QPushButton('Browse for file')
-        self.layoutTxtTemplate.addWidget(self.txttemplateButton)
-        self.txttemplateButton.clicked.connect(
-            self.on_txttemplatebutton_clicked)
-        self.txttemplateEdit = QLineEdit()
-        self.layoutTxtTemplate.addWidget(self.txttemplateEdit)
-        self.layoutV.addLayout(self.layoutTxtTemplate)
-
-        # delay
-        self.delayLabel = QLabel('Write Delay')
-        self.delayLabel.setFont(self.fBold)
-        self.delayDesc = QLabel('Amount of time, in seconds, \
-to delay writing the new track info once it\'s retrieved. (Default = 0)')
-        self.delayDesc.setStyleSheet('color: grey')
-        self.layoutV.addWidget(self.delayLabel)
-        self.layoutV.addWidget(self.delayDesc)
-        self.delayEdit = QLineEdit()
-        self.delayEdit.setMaximumWidth(40)
-        self.layoutV.addWidget(self.delayEdit)
-
-        # separator line
-        self.separator3.setFrameShape(QFrame.HLine)
-        # self.separator.setFrameShadow(QFrame.Sunken)
-        self.layoutV.addWidget(self.separator3)
-
-        # HTTP Server Support
-        self.httpenabledLabel = QLabel('HTTP Server Support')
-        self.httpenabledLabel.setFont(self.fBold)
-        self.layoutV.addWidget(self.httpenabledLabel)
-        self.httpenabledCbox = QCheckBox()
-        self.httpenabledCbox.setMaximumWidth(25)
-        self.layoutHttpEnableCheckbox.addWidget(self.httpenabledCbox)
-        self.httpenabledDesc = QLabel('Enable HTTP Server')
-        self.httpenabledDesc.setStyleSheet('color: grey')
-        self.layoutHttpEnableCheckbox.addWidget(self.httpenabledDesc)
-        self.layoutV.addLayout(self.layoutHttpEnableCheckbox)
-
-        try:
-            hostname = socket.gethostname()
-            hostip = socket.gethostbyname(hostname)
-        except:  # pylint: disable = bare-except
-            hostname = 'Unknown Hostname'
-            hostip = 'Unknown IP'
-
-        self.connectionLabel = QLabel('Networking Info')
-        self.connectionLabel.setFont(self.fBold)
-        self.connectionDesc = QLabel(
-            f'Hostname: {hostname} / IP Address:{hostip}')
-        self.connectionDesc.setStyleSheet('color: grey')
-        self.layoutV.addWidget(self.connectionLabel)
-        self.layoutV.addWidget(self.connectionDesc)
-
-        self.httpportLabel = QLabel('Port')
-        self.httpportLabel.setFont(self.fBold)
-        self.httpportDesc = QLabel('TCP Port to run the server on')
-        self.httpportDesc.setStyleSheet('color: grey')
-        self.layoutV.addWidget(self.httpportLabel)
-        self.layoutV.addWidget(self.httpportDesc)
-        self.httpportEdit = QLineEdit()
-        self.httpportEdit.setMaximumWidth(60)
-        self.layoutV.addWidget(self.httpportEdit)
-
-        self.htmltemplateLabel = QLabel('HTML Template')
-        self.htmltemplateLabel.setFont(self.fBold)
-        self.htmltemplateDesc = QLabel('Template file to format')
-        self.htmltemplateDesc.setStyleSheet('color: grey')
-        self.layoutV.addWidget(self.htmltemplateLabel)
-        self.layoutV.addWidget(self.htmltemplateDesc)
-        self.htmltemplateButton = QPushButton('Browse for file')
-        self.layoutHttpHtmlTemplate.addWidget(self.htmltemplateButton)
-        self.htmltemplateButton.clicked.connect(
-            self.on_htmltemplatebutton_clicked)
-        self.htmltemplateEdit = QLineEdit()
-        self.layoutHttpHtmlTemplate.addWidget(self.htmltemplateEdit)
-        self.layoutV.addLayout(self.layoutHttpHtmlTemplate)
-
-        self.httpdirLabel = QLabel('Server Path')
-        self.httpdirLabel.setFont(self.fBold)
-        self.httpdirDesc = QLabel('Location to write data')
-        self.httpdirDesc.setStyleSheet('color: grey')
-        self.layoutV.addWidget(self.httpdirLabel)
-        self.layoutV.addWidget(self.httpdirDesc)
-        self.httpdirButton = QPushButton('Browse for folder')
-        self.layoutHttpServerPath.addWidget(self.httpdirButton)
-        self.httpdirButton.clicked.connect(self.on_httpdirbutton_clicked)
-        self.httpdirEdit = QLineEdit()
-        self.layoutHttpServerPath.addWidget(self.httpdirEdit)
-        self.layoutV.addLayout(self.layoutHttpServerPath)
-
-        # error area
-        self.layoutV.addWidget(self.errLabel)
-        # reset btn
-        self.resetButton = QPushButton('Reset')
-        self.resetButton.setMaximumSize(80, 35)
-        self.layoutH4.addWidget(self.resetButton)
-        self.resetButton.clicked.connect(self.on_resetbutton_clicked)
-        # cancel btn
-        self.cancelButton = QPushButton('Cancel')
-        self.cancelButton.setMaximumSize(80, 35)
-        self.layoutH4.addWidget(self.cancelButton)
-        self.cancelButton.clicked.connect(self.on_cancelbutton_clicked)
-        # save btn
-        self.saveButton = QPushButton('Save')
-        self.saveButton.setMaximumSize(80, 35)
-        self.layoutH4.addWidget(self.saveButton)
-        self.saveButton.clicked.connect(self.on_savebutton_clicked)
-        self.layoutV.addLayout(self.layoutH4)
-
-        self.window.setLayout(self.layoutV)
-
-    def upd_win(self):
-        ''' update the settings window '''
-        global CONFIG
-
-        CONFIG.get()
-
-        if CONFIG.local:
-            self.localRadio.setChecked(True)
-            self.remoteRadio.setChecked(False)
-        else:
-            self.localRadio.setChecked(False)
-            self.remoteRadio.setChecked(True)
-        self.libEdit.setText(CONFIG.libpath)
-        self.urlEdit.setText(CONFIG.url)
-        self.fileEdit.setText(CONFIG.file)
-        self.txttemplateEdit.setText(CONFIG.txttemplate)
-        self.httpenabledCbox.setChecked(CONFIG.httpenabled)
-        self.httpportEdit.setText(str(CONFIG.httpport))
-        self.httpdirEdit.setText(CONFIG.httpdir)
-        self.htmltemplateEdit.setText(CONFIG.htmltemplate)
-        self.intervalEdit.setText(str(CONFIG.interval))
-        self.delayEdit.setText(str(CONFIG.delay))
-        self.notifCbox.setChecked(CONFIG.notif)
-
-    def disable_web(self):
-        ''' if the web server gets in trouble, this gets called '''
-        self.errLabel.setText(
-            'HTTP Server settings are invalid. Bad port? Wrong directory?')
-        self.httpenabledCbox.setChecked(False)
-        self.upd_win()
-        self.upd_conf()
-
-    # pylint: disable=too-many-locals
-    def upd_conf(self):
-        ''' update the configuration '''
-
-        global CONFIG
-
-        local = str(self.localRadio.isChecked())
-        libpath = self.libEdit.text()
-        url = self.urlEdit.text()
-        file = self.fileEdit.text()
-        txttemplate = self.txttemplateEdit.text()
-        httpenabled = self.httpenabledCbox.isChecked()
-        httpport = int(self.httpportEdit.text())
-        httpdir = self.httpdirEdit.text()
-        htmltemplate = self.htmltemplateEdit.text()
-        interval = self.intervalEdit.text()
-        delay = self.delayEdit.text()
-        notif = self.notifCbox.isChecked()
-
-        CONFIG.put(initialized=True,
-                   local=local,
-                   libpath=libpath,
-                   url=url,
-                   file=file,
-                   txttemplate=txttemplate,
-                   httpport=httpport,
-                   httpdir=httpdir,
-                   httpenabled=httpenabled,
-                   htmltemplate=htmltemplate,
-                   interval=interval,
-                   delay=delay,
-                   notif=notif)
-
-    def on_radiobutton_select(self, b):
-        ''' radio button action '''
-        if b.text() == 'Local':
-            self.urlLabel.setHidden(True)
-            self.urlEdit.setHidden(True)
-            self.urlDesc.setHidden(True)
-            self.intervalLabel.setHidden(True)
-            self.intervalDesc.setHidden(True)
-            self.intervalEdit.setHidden(True)
-            self.libLabel.setHidden(False)
-            self.libEdit.setHidden(False)
-            self.libDesc.setHidden(False)
-            self.libButton.setHidden(False)
-            self.window.hide()
-            self.errLabel.setText('')
-            self.window.show()
-        else:
-            self.urlLabel.setHidden(False)
-            self.urlEdit.setHidden(False)
-            self.urlDesc.setHidden(False)
-            self.intervalLabel.setHidden(False)
-            self.intervalDesc.setHidden(False)
-            self.intervalEdit.setHidden(False)
-            self.libLabel.setHidden(True)
-            self.libEdit.setHidden(True)
-            self.libDesc.setHidden(True)
-            self.libButton.setHidden(True)
-            self.window.hide()
-            self.errLabel.setText('')
-            self.window.show()
-
-    def on_filebutton_clicked(self):
-        ''' file button clicked action '''
-        startfile = self.fileEdit.text()
-        if startfile:
-            startdir = os.path.dirname(startfile)
-        else:
-            startdir = '.'
-        filename = QFileDialog.getSaveFileName(self.window, 'Open file',
-                                               startdir, '*.txt')
-        if filename:
-            self.fileEdit.setText(filename[0])
-
-    def on_txttemplatebutton_clicked(self):
-        ''' file button clicked action '''
-        global BUNDLE_DIR
-
-        startfile = self.txttemplateEdit.text()
-        if startfile:
-            startdir = os.path.dirname(startfile)
-        else:
-            startdir = os.path.join(BUNDLE_DIR, "templates")
-        filename = QFileDialog.getOpenFileName(self.window, 'Open file',
-                                               startdir, '*.txt')
-        if filename:
-            self.txttemplateEdit.setText(filename[0])
-
-    def on_libbutton_clicked(self):
-        ''' lib button clicked action'''
-        startdir = self.libEdit.text()
-        if not startdir:
-            startdir = str(pathlib.Path.home())
-        libdir = QFileDialog.getExistingDirectory(self.window,
-                                                  'Select directory', startdir)
-        if libdir:
-            self.libEdit.setText(libdir)
-
-    def on_httpdirbutton_clicked(self):
-        ''' file button clicked action '''
-        startdir = self.httpdirEdit.text()
-        if not startdir:
-            startdir = str(pathlib.Path.home())
-        dirname = QFileDialog.getExistingDirectory(self.window,
-                                                   'Select directory',
-                                                   startdir)
-        if dirname:
-            self.httpdirEdit.setText(dirname)
-
-    def on_htmltemplatebutton_clicked(self):
-        ''' file button clicked action '''
-        global BUNDLE_DIR
-
-        startfile = self.htmltemplateEdit.text()
-        if startfile:
-            startdir = os.path.dirname(startfile)
-        else:
-            startdir = os.path.join(BUNDLE_DIR, "templates")
-        filename = QFileDialog.getOpenFileName(self.window, 'Open file',
-                                               startdir, '*.htm *.html')
-        if filename:
-            self.htmltemplateEdit.setText(filename[0])
-
-    def on_cancelbutton_clicked(self):
-        ''' cancel button clicked action '''
-        global TRAY
-
-        if TRAY:
-            TRAY.action_config.setEnabled(True)
-        self.upd_win()
-        self.close()
-        self.errLabel.setText('')
-
-        if not CONFIG.file:
-            TRAY.cleanquit()
-
-    def on_resetbutton_clicked(self):
-        ''' cancel button clicked action '''
-        global TRAY, CONFIG
-
-        CONFIG.reset()
-        self.upd_win()
-
-    def on_savebutton_clicked(self):
-        ''' save button clicked action '''
-        global PAUSED, TRAY, MIXMODE, CONFIG
-
-        if self.remoteRadio.isChecked():
-            if 'https://serato.com/playlists' not in self.urlEdit.text() and \
-                    'https://www.serato.com/playlists' not in self.urlEdit.text() or \
-                    len(self.urlEdit.text()) < 30:
-                self.errLabel.setText('* URL is invalid')
-                self.window.hide()
-                self.window.show()
-                return
-
-        if self.localRadio.isChecked():
-            if '_Serato_' not in self.libEdit.text():
-                self.errLabel.setText(
-                    '* Serato Library Path is required.  Should point to "_Serato_" folder'
-                )
-                self.window.hide()
-                self.window.show()
-                return
-
-        if self.fileEdit.text() == "":
-            self.errLabel.setText('* File is required')
-            self.window.hide()
-            self.window.show()
-            return
-
-        PAUSED = False
-        self.upd_conf()
-        self.close()
-        self.errLabel.setText('')
-        MIXMODE = 'active'
-        if CONFIG.local:
-            TRAY.action_mixmode.setText('Using: Oldest')
-        else:
-            MIXMODE = 'passive'
-            TRAY.action_mixmode.setText('Using: Newest')
-        TRAY.action_mixmode.setEnabled(True)
-        TRAY.action_pause.setText('Pause')
-        TRAY.action_pause.setEnabled(True)
-
-    def show(self):
-        ''' show the system tram '''
-        global TRAY
-        if TRAY:
-            TRAY.action_config.setEnabled(False)
-        self.upd_win()
-        self.scroll.show()
-        self.scroll.setFocus()
-
-    def close(self):
-        ''' close the system tray '''
-        global TRAY
-
-        TRAY.action_config.setEnabled(True)
-        self.scroll.hide()
-
-    def exit(self):
-        ''' exit the tray '''
-        self.scroll.close()
-
-
-class Tray:  # create tray icon menu
+class Tray:  # pylint: disable=too-many-instance-attributes
     ''' System Tray object '''
     def __init__(self):
 
-        global __version__, ICONFILE, CONFIG, MIXMODE
+        global __version__, CONFIG
 
-        self.settingswindow = SettingsUI(ICONFILE)
+        self.settingswindow = nowplaying.settingsui.SettingsUI(
+            tray=self, config=CONFIG, version=__version__)
         ''' create systemtray UI '''
-        self.icon = QIcon(ICONFILE)
+        self.icon = QIcon(CONFIG.iconfile)
         self.tray = QSystemTrayIcon()
         self.tray.setIcon(self.icon)
         self.tray.setToolTip("Now Playing ▶")
@@ -602,7 +82,7 @@ class Tray:  # create tray icon menu
         self.menu.addSeparator()
 
         self.action_mixmode = QAction()
-        self.action_mixmode.triggered.connect(self.passivemixmode)
+        self.action_mixmode.triggered.connect(self.newestmixmode)
         self.menu.addAction(self.action_mixmode)
         self.action_mixmode.setEnabled(False)
 
@@ -626,11 +106,11 @@ class Tray:  # create tray icon menu
             self.settingswindow.show()
         else:
             if CONFIG.local:
-                self.action_mixmode.setText('Using: Oldest')
+                self.action_mixmode.setText('Newest')
+                self.action_mixmode.setEnabled(True)
             else:
-                MIXMODE = 'passive'
-                self.action_mixmode.setText('Using: Newest')
-            self.action_mixmode.setEnabled(True)
+                CONFIG.mixmode = 'newest'
+                self.action_mixmode.setEnabled(False)
             self.action_pause.setText('Pause')
             self.action_pause.setEnabled(True)
 
@@ -673,49 +153,51 @@ class Tray:  # create tray icon menu
 
     def unpause(self):
         ''' unpause polling '''
+        global CONFIG
 
-        global PAUSED
-        PAUSED = False
+        CONFIG.paused = False
         self.action_pause.setText('Pause')
         self.action_pause.triggered.connect(self.pause)
 
     def pause(self):
         ''' pause polling '''
 
-        global PAUSED
-        PAUSED = True
+        global CONFIG
+        CONFIG.paused = True
         self.action_pause.setText('Resume')
         self.action_pause.triggered.connect(self.unpause)
 
-    def activemixmode(self):
+    def oldestmixmode(self):
         ''' enable active mixing '''
 
-        global MIXMODE, CONFIG
+        global CONFIG
 
         if not CONFIG.local:
-            MIXMODE = 'passive'
-            self.action_mixmode.setText('Using: Newest')
-            self.action_mixmode.triggered.connect(self.activemixmode)
+            CONFIG.mixmode = 'newest'
+            self.action_mixmode.setEnabled(False)
+            self.action_mixmode.setText('Newest')
+            self.action_mixmode.triggered.connect(self.oldestmixmode)
             return
 
-        MIXMODE = 'active'
-        self.action_mixmode.setText('Using: Oldest')
-        self.action_mixmode.triggered.connect(self.passivemixmode)
+        CONFIG.mixmode = 'oldest'
+        self.action_mixmode.setText('Newest')
+        self.action_mixmode.triggered.connect(self.newestmixmode)
 
-    def passivemixmode(self):
+    def newestmixmode(self):
         ''' enable passive mixing '''
 
-        global MIXMODE, CONFIG
+        global CONFIG
 
         if not CONFIG.local:
-            MIXMODE = 'passive'
-            self.action_mixmode.setText('Using: Newest')
-            self.action_mixmode.triggered.connect(self.activemixmode)
+            CONFIG.mixmode = 'newest'
+            self.action_mixmode.setText('Newest')
+            self.action_mixmode.triggered.connect(self.oldestmixmode)
+            self.action_mixmode.setEnabled(False)
             return
 
-        MIXMODE = 'passive'
-        self.action_mixmode.setText('Using: Newest')
-        self.action_mixmode.triggered.connect(self.activemixmode)
+        CONFIG.mixmode = 'newest'
+        self.action_mixmode.setText('Oldest')
+        self.action_mixmode.triggered.connect(self.oldestmixmode)
 
     def cleanquit(self):
         ''' quit app and cleanup '''
@@ -748,7 +230,7 @@ class WebHandler(BaseHTTPRequestHandler):
             share specific content.
         '''
 
-        global ICONFILE
+        global CONFIG
 
         # see what was asked for
         parsedrequest = urllib.parse.urlparse(self.path)
@@ -757,7 +239,7 @@ class WebHandler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header('Content-type', 'image/x-icon')
             self.end_headers()
-            with open(ICONFILE, 'rb') as iconfh:
+            with open(CONFIG.iconfile, 'rb') as iconfh:
                 self.wfile.write(iconfh.read())
             return
 
@@ -775,6 +257,14 @@ class WebHandler(BaseHTTPRequestHandler):
             self.wfile.write(
                 b'<head><meta http-equiv="refresh" content="5" ></head>')
             self.wfile.write(b'<body></body></html>\n')
+            return
+
+        if parsedrequest.path in ['/index.txt']:
+            self.send_response(200)
+            self.send_header('Content-type', 'text/plain')
+            self.end_headers()
+            with open(CONFIG.file, 'rb') as textfh:
+                self.wfile.write(textfh.read())
             return
 
         if parsedrequest.path in ['/cover.jpg']:
@@ -798,7 +288,6 @@ class WebHandler(BaseHTTPRequestHandler):
                 return
 
         self.send_error(404)
-        return
 
 
 class ThreadingWebServer(ThreadingMixIn, HTTPServer):
@@ -829,14 +318,14 @@ class WebServer(QThread):
             to a halt by triggering pause.
 
         '''
-        global CONFIG, PAUSED
+        global CONFIG
 
         while not CONFIG.httpenabled and not self.endthread:
             time.sleep(5)
             CONFIG.get()
 
         while not self.endthread:
-            while PAUSED:
+            while CONFIG.paused:
                 time.sleep(1)
 
             resetserver = False
@@ -973,7 +462,7 @@ class TrackPoll(QThread):
 
 def gettrack(configuration):  # pylint: disable=too-many-branches
     ''' get currently playing track, returns None if not new or not found '''
-    global CURRENTMETA, PAUSED, MIXMODE
+    global CURRENTMETA
 
     conf = configuration
 
@@ -981,7 +470,7 @@ def gettrack(configuration):  # pylint: disable=too-many-branches
 
     # check paused state
     while True:
-        if not PAUSED:
+        if not conf.paused:
             break
 
     #print("checking...")
@@ -992,7 +481,7 @@ def gettrack(configuration):  # pylint: disable=too-many-branches
         sess_dir = os.path.abspath(os.path.join(hist_dir, "Sessions"))
         if os.path.isdir(sess_dir):
             serato = nowplaying.serato.SeratoHandler(seratodir=sess_dir,
-                                                     mixmode=MIXMODE)
+                                                     mixmode=conf.mixmode)
             serato.process_sessions()
 
     else:  # remotely derived

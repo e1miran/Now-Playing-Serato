@@ -18,7 +18,6 @@ class ConfigFile:  # pylint: disable=too-many-instance-attributes
     _organization = 'com.github.em1ran'
     _application = 'NowPlaying'
 
-
     ## Qt doesn't appear to support re-entrant locks or mutexes so
     ## let's use boring old Python threading
 
@@ -27,15 +26,31 @@ class ConfigFile:  # pylint: disable=too-many-instance-attributes
     def __init__(self, bundledir=None, reset=False):
 
         ConfigFile.lock.acquire()
-
         self.initialized = False
         self.bundledir = bundledir
-        self.cparser = QSettings(ConfigFile._organization,
+
+        if sys.platform == "win32":
+            self.libpath = os.path.join(pathlib.Path.home(), "My Music",
+                                        "_Serato_")
+            self.qsettingsformat = QSettings.IniFormat
+        else:
+            self.libpath = os.path.join(pathlib.Path.home(), "Music",
+                                        "_Serato_")
+            self.qsettingsformat = QSettings.NativeFormat
+
+        self.iconfile = os.path.abspath(
+            os.path.join(self.bundledir, "bin", "icon.ico"))
+
+        self.mixmode = 'newest'
+
+        self.cparser = QSettings(self.qsettingsformat, QSettings.UserScope,
+                                 ConfigFile._organization,
                                  ConfigFile._application)
         self.interval = float(10)
         self.delay = float(0)
         self.notif = False
         self.local = True
+        self.paused = False
         self.httpenabled = False
         self.httpport = 8899
         self.url = None
@@ -46,13 +61,6 @@ class ConfigFile:  # pylint: disable=too-many-instance-attributes
         self.httpdir = None
         self.htmltemplate = os.path.join(self.bundledir, "templates",
                                          "basic.htm")
-
-        if sys.platform == "win32":
-            self.libpath = os.path.join(pathlib.Path.home(), "My Music",
-                                        "_Serato_")
-        else:
-            self.libpath = os.path.join(pathlib.Path.home(), "Music",
-                                        "_Serato_")
 
         # Tell Qt to match the above
 
@@ -112,7 +120,8 @@ class ConfigFile:  # pylint: disable=too-many-instance-attributes
         self.htmltemplate = self.cparser.value('weboutput/htmltemplate')
 
         try:
-            self.initialized = self.cparser.value('settings/initialized', type=bool)
+            self.initialized = self.cparser.value('settings/initialized',
+                                                  type=bool)
         except TypeError:
             pass
 
@@ -121,9 +130,8 @@ class ConfigFile:  # pylint: disable=too-many-instance-attributes
     def defaults(self):
         ''' default values for things '''
 
-        settings = QSettings(QSettings.SystemScope,
-                             ConfigFile._organization,
-                             ConfigFile._application)
+        settings = QSettings(self.qsettingsformat, QSettings.SystemScope,
+                             ConfigFile._organization, ConfigFile._application)
         settings.setValue('settings/initialized', False)
         settings.setValue('settings/interval', self.interval)
         settings.setValue('settings/delay', self.delay)
@@ -140,8 +148,9 @@ class ConfigFile:  # pylint: disable=too-many-instance-attributes
         settings.setValue('weboutput/htmltemplate', self.htmltemplate)
 
     # pylint: disable=too-many-locals, too-many-arguments
-    def put(self, initialized, local, libpath, url, file, txttemplate, httpport, httpdir,
-            httpenabled, htmltemplate, interval, delay, notif):
+    def put(self, initialized, local, libpath, url, file, txttemplate,
+            httpport, httpdir, httpenabled, htmltemplate, interval, delay,
+            notif):
         ''' Save the configuration file '''
 
         ConfigFile.lock.acquire()
