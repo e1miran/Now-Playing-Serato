@@ -88,7 +88,10 @@ information.
 
 ### Uninstallation
 
-The process for uninstalling the app is the same on both platforms.  Simply delete the file or folder from the location to where you pasted it.
+The process for uninstalling the app is the same on both platforms.  Simply delete the
+file or folder from the location to where you pasted it.  Preferences will be retained in case
+you wish to re-install it.  If you wish to remove those too, then will be in the standard place
+for your particular operating system (AppData for Windows, Library/Preferences for OS X, etc)
 
 ## Settings
 
@@ -159,7 +162,7 @@ due to limitations on the Serato-side.
 
 __Now Playing__ has the ability to serve a web page after a song change.  This option
 allows users to utilize features such as the OBS Browser source for dynamically
-changing content.  There are three URLs supported:
+changing content.  There are many URLs supported:
 
 * /index.html (or /index.htm or just /)
 
@@ -168,12 +171,16 @@ a refresh document.  The title card will be given exactly once upon connection w
 the refresh document being returned in subsequent connections until a new track has
 been detected.  This process allows for using fades and other HTML tricks.
 
+* /index.txt
+
+Returns the content of the plain text file that was written.
+
 * /cover.jpg or /cover.png
 
-This URL will return the cover image, if available. It recommended to use the '{{ coverurl }}' template variable
-to determine which one to use. Note that the format (JPEG or PNG) is entirely dependent upon
-the store image in the media.  __Now Playing__ does not do image conversion or support more than JPEG or PNG
-images.
+This URL will return the cover image, if available. It recommended to use the '{{ coverurl }}'
+template variable to determine which one to use. Note that the format (JPEG or PNG) is entirely
+dependent upon the store image in the media.  __Now Playing__ does not do image conversion or
+support more than JPEG or PNG images.
 
 * /favicon.ico
 
