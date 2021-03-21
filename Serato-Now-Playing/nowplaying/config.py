@@ -5,19 +5,15 @@
 
 import logging
 import os
-import pathlib
 import sys
 import threading
 
 # pylint: disable=no-name-in-module
-from PyQt5.QtCore import QSettings, QThread
+from PyQt5.QtCore import QCoreApplication, QSettings, QStandardPaths, QThread
 
 
 class ConfigFile:  # pylint: disable=too-many-instance-attributes
     ''' read and write to config.ini '''
-
-    _organization = 'com.github.em1ran'
-    _application = 'NowPlaying'
 
     ## Qt doesn't appear to support re-entrant locks or mutexes so
     ## let's use boring old Python threading
@@ -25,29 +21,37 @@ class ConfigFile:  # pylint: disable=too-many-instance-attributes
     lock = threading.RLock()
 
     def __init__(self, bundledir=None, reset=False):
-        logging.debug('attempting lock for %u', QThread.currentThreadId())
+
+        logging.debug('attempting lock')
         ConfigFile.lock.acquire()
-        logging.debug('locked by %u', QThread.currentThreadId())
+        logging.debug('locked')
+
         self.initialized = False
+        self.templatedir = os.path.join(
+            QStandardPaths.standardLocations(
+                QStandardPaths.DocumentsLocation)[0],
+            QCoreApplication.applicationName(), 'templates')
         self.bundledir = bundledir
 
+        logging.debug('templatedir at %s', self.templatedir)
+        logging.debug('bundledir at %s', self.bundledir)
+
+        self.libpath = os.path.join(
+            QStandardPaths.standardLocations(QStandardPaths.MusicLocation)[0],
+            "_Serato_")
+
         if sys.platform == "win32":
-            self.libpath = os.path.join(pathlib.Path.home(), "My Music",
-                                        "_Serato_")
             self.qsettingsformat = QSettings.IniFormat
         else:
-            self.libpath = os.path.join(pathlib.Path.home(), "Music",
-                                        "_Serato_")
             self.qsettingsformat = QSettings.NativeFormat
 
-        self.iconfile = os.path.abspath(
-            os.path.join(self.bundledir, "bin", "icon.ico"))
+        self.iconfile = self.find_icon_file()
 
         self.mixmode = 'newest'
 
         self.cparser = QSettings(self.qsettingsformat, QSettings.UserScope,
-                                 ConfigFile._organization,
-                                 ConfigFile._application)
+                                 QCoreApplication.organizationName(),
+                                 QCoreApplication.applicationName())
         self.interval = float(10)
         self.delay = float(0)
         self.notif = False
@@ -57,12 +61,12 @@ class ConfigFile:  # pylint: disable=too-many-instance-attributes
         self.httpport = 8899
         self.url = None
         self.file = None
-        self.txttemplate = os.path.join(self.bundledir, "templates",
+        self.txttemplate = os.path.join(self.templatedir,
                                         "basic.txt")
         self.httpenabled = False
         self.httpdir = None
         self.usinghttpdir = None
-        self.htmltemplate = os.path.join(self.bundledir, "templates",
+        self.htmltemplate = os.path.join(self.templatedir,
                                          "basic.htm")
 
         # Tell Qt to match the above
@@ -73,7 +77,7 @@ class ConfigFile:  # pylint: disable=too-many-instance-attributes
         else:
             self.get()
         ConfigFile.lock.release()
-        logging.debug('lock release for %u', QThread.currentThreadId())
+        logging.debug('lock release')
 
     def reset(self):
         ''' forcibly go back to defaults '''
@@ -83,9 +87,9 @@ class ConfigFile:  # pylint: disable=too-many-instance-attributes
     def get(self):
         ''' refresh values '''
 
-        logging.debug('attempting lock for %u', QThread.currentThreadId())
+        logging.debug('attempting lock')
         ConfigFile.lock.acquire()
-        logging.debug('locked by %u', QThread.currentThreadId())
+        logging.debug('locked')
 
         try:
             self.interval = self.cparser.value('settings/interval', type=float)
@@ -135,14 +139,15 @@ class ConfigFile:  # pylint: disable=too-many-instance-attributes
             pass
 
         ConfigFile.lock.release()
-        logging.debug('lock release for %u', QThread.currentThreadId())
+        logging.debug('lock release')
 
     def defaults(self):
         ''' default values for things '''
         logging.debug('by thread %u', QThread.currentThreadId())
 
         settings = QSettings(self.qsettingsformat, QSettings.SystemScope,
-                             ConfigFile._organization, ConfigFile._application)
+                             QCoreApplication.organizationName(),
+                             QCoreApplication.applicationName())
         settings.setValue('settings/initialized', False)
         settings.setValue('settings/interval', self.interval)
         settings.setValue('settings/delay', self.delay)
@@ -164,9 +169,9 @@ class ConfigFile:  # pylint: disable=too-many-instance-attributes
             notif):
         ''' Save the configuration file '''
 
-        logging.debug('attempting lock for %u', QThread.currentThreadId())
+        logging.debug('attempting lock')
         ConfigFile.lock.acquire()
-        logging.debug('locked by %u', QThread.currentThreadId())
+        logging.debug('locked')
 
         self.initialized = initialized
         self.local = local
@@ -186,14 +191,14 @@ class ConfigFile:  # pylint: disable=too-many-instance-attributes
         self.save()
 
         ConfigFile.lock.release()
-        logging.debug('lock release for %u', QThread.currentThreadId())
+        logging.debug('lock release')
 
     def save(self):
         ''' save the current set '''
 
-        logging.debug('attempting lock for %u', QThread.currentThreadId())
+        logging.debug('attempting lock')
         ConfigFile.lock.acquire()
-        logging.debug('locked by %u', QThread.currentThreadId())
+        logging.debug('locked')
 
         self.cparser.setValue('settings/initialized', self.initialized)
         self.cparser.setValue('settings/interval', self.interval)
@@ -211,16 +216,33 @@ class ConfigFile:  # pylint: disable=too-many-instance-attributes
         self.cparser.setValue('weboutput/htmltemplate', self.htmltemplate)
 
         ConfigFile.lock.release()
-        logging.debug('lock release for %u', QThread.currentThreadId())
+        logging.debug('lock release')
 
     # pylint: disable=too-many-locals, too-many-arguments
     def setusinghttpdir(self, usinghttpdir):
         ''' Save the configuration file '''
 
-        logging.debug('attempting lock for %u', QThread.currentThreadId())
+        logging.debug('attempting lock')
         ConfigFile.lock.acquire()
-        logging.debug('locked by %u', QThread.currentThreadId())
+        logging.debug('locked')
         logging.debug('setting the usinghttpdir to %s', usinghttpdir)
         self.usinghttpdir = usinghttpdir
         ConfigFile.lock.release()
-        logging.debug('lock release for %u', QThread.currentThreadId())
+        logging.debug('lock release')
+
+    def find_icon_file(self):
+        ''' try to find our icon '''
+
+        for testdir in [
+                self.bundledir,
+                os.path.join(self.bundledir, 'bin'),
+                os.path.join(self.bundledir, 'resources')
+        ]:
+            for testfilename in ['icon.ico', 'windows.ico']:
+                testfile = os.path.join(testdir, testfilename)
+                if os.path.exists(testfile):
+                    logging.debug('iconfile at %s', testfile)
+                    return testfile
+
+        logging.error('Unable to find the icon file. Death only follows.')
+        return None

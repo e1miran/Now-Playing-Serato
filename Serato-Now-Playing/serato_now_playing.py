@@ -8,17 +8,21 @@
 # pylint: disable=too-few-public-methods
 
 import logging
+import logging.handlers
 import os
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import pathlib
+import shutil
 from socketserver import ThreadingMixIn
 import sys
 import tempfile
+import threading
 import time
 import urllib.parse
 
 from PyQt5.QtCore import \
                             pyqtSignal, \
+                            QStandardPaths, \
                             QThread
 from PyQt5.QtWidgets import \
                             QAction, \
@@ -28,43 +32,24 @@ from PyQt5.QtWidgets import \
                             QSystemTrayIcon
 from PyQt5.QtGui import QIcon
 
-import nowplaying.settingsui
 import nowplaying.config
 import nowplaying.serato
+import nowplaying.settingsui
 import nowplaying.utils
 
 __author__ = "Ely Miranda"
 __version__ = "1.5.0"
 __license__ = "MIT"
 
-
-# this loglevel should eventually be tied into config
-# but for now, hard-set at debug
-logging.basicConfig(format='%(asctime)s %(module)s:%(funcName)s:%(lineno)d ' +
-                    '%(levelname)s %(message)s',
-                    datefmt='%Y-%m-%dT%H:%M:%S%z',
-                    filename=os.path.join(tempfile.gettempdir(),
-                                          'npsdebug.log'),
-                    level=logging.DEBUG)
-logging = logging.getLogger(__name__)
-logging.info('booting up %s', __version__)
-
-# set paths for bundled files
-if getattr(sys, 'frozen', False) and sys.platform == "darwin":
-    BUNDLEDIR = os.path.abspath(os.path.dirname(
-        sys.executable))  # sys._MEIPASS
-else:
-    BUNDLEDIR = os.path.abspath(os.path.dirname(__file__))
-
-# define global variables
-CURRENTMETA = {'fetchedartist': None, 'fetchedtitle': None}
-
-CONFIG = nowplaying.config.ConfigFile(bundledir=BUNDLEDIR)
-QAPP = QApplication([])
+QAPP = QApplication(sys.argv)
 QAPP.setOrganizationName('com.github.em1ran')
 QAPP.setApplicationName('NowPlaying')
-QAPP.setQuitOnLastWindowClosed(False)
 
+# Initialize these later..
+BUNDLEDIR = None
+TEMPLATEDIR = None
+CONFIG = None
+CURRENTMETA = None
 TRAY = None
 
 
@@ -72,7 +57,6 @@ class Tray:  # pylint: disable=too-many-instance-attributes
     ''' System Tray object '''
     def __init__(self):
         global __version__, CONFIG
-        logging.debug('Tray is thread %u', QThread.currentThreadId())
         self.settingswindow = nowplaying.settingsui.SettingsUI(
             tray=self, config=CONFIG, version=__version__)
         ''' create systemtray UI '''
@@ -219,7 +203,7 @@ class Tray:  # pylint: disable=too-many-instance-attributes
         self.tray.setVisible(False)
 
         if CONFIG.file:
-            nowplaying.utils.writetxttrack(filename=CONFIG.file)
+            nowplaying.utils.writetxttrack(filename=CONFIG.file, clear=True)
         # calling exit should call __del__ on all of our QThreads
         QAPP.exit(0)
 
@@ -321,6 +305,7 @@ class WebServer(QThread):
         self.prevport = 0
         self.prevdir = None
         self.endthread = False
+        self.setObjectName('WebServerThread')
 
     def run(self):  # pylint: disable=too-many-branches, too-many-statements
         '''
@@ -334,8 +319,8 @@ class WebServer(QThread):
 
         '''
         global CONFIG
-        logging.debug('WebServer is thread %u', QThread.currentThreadId())
 
+        threading.current_thread().name = 'WebServer'
         while not CONFIG.httpenabled and not self.endthread and not CONFIG.initialized:
             time.sleep(5)
             CONFIG.get()
@@ -344,7 +329,8 @@ class WebServer(QThread):
 
         while not self.endthread:
             while CONFIG.paused:
-                time.sleep(1)
+                time.sleep(5)
+                CONFIG.get()
 
             resetserver = False
             time.sleep(1)
@@ -426,12 +412,13 @@ class TrackPoll(QThread):
     def __init__(self, parent=None):
         QThread.__init__(self, parent)
         self.endthread = False
+        self.setObjectName('TrackPoll')
 
     def run(self):
         ''' track polling process '''
 
         global CONFIG
-        logging.debug('TrackPoll is thread %u', QThread.currentThreadId())
+        threading.current_thread().name = 'TrackPoll'
         previoustxttemplate = None
         previoushtmltemplate = None
 
@@ -441,7 +428,7 @@ class TrackPoll(QThread):
             CONFIG.get()
 
         while not self.endthread:
-
+            time.sleep(1)
             CONFIG.get()
 
             if not previoustxttemplate or previoustxttemplate != CONFIG.txttemplate:
@@ -544,11 +531,89 @@ def gettrack(configuration):  # pylint: disable=too-many-branches
 
     return CURRENTMETA
 
+def setuplogging():
+    ''' configure logging '''
+    global QAPP
+
+    besuretorotate = False
+
+    logpath = os.path.join(
+        QStandardPaths.standardLocations(QStandardPaths.DocumentsLocation)[0],
+        QAPP.applicationName(), 'logs')
+    pathlib.Path(logpath).mkdir(parents=True, exist_ok=True)
+    logpath = os.path.join(logpath, "debug.log")
+    if os.path.exists(logpath):
+        besuretorotate = True
+
+    logfhandler = logging.handlers.RotatingFileHandler(filename=logpath,
+                                                       backupCount=10,
+                                                       encoding='utf-8')
+    if besuretorotate:
+        logfhandler.doRollover()
+
+    # this loglevel should eventually be tied into config
+    # but for now, hard-set at debug
+    logging.basicConfig(
+        format='%(asctime)s %(threadName)s %(module)s:%(funcName)s:%(lineno)d ' +
+        '%(levelname)s %(message)s',
+        datefmt='%Y-%m-%dT%H:%M:%S%z',
+        handlers=[logfhandler],
+        level=logging.DEBUG)
+
+def bootstrap_template_ignore(srcdir, srclist):  # pylint: disable=unused-argument
+    ''' do not copy template files that already exist '''
+    global TEMPLATEDIR
+
+    ignore = []
+    for src in srclist:
+        check = os.path.join(TEMPLATEDIR, src)
+        if os.path.exists(check):
+            ignore.append(src)
+        else:
+            logging.debug('Adding %s to templates dir', src)
+
+    return ignore
+
+
+def bootstrap():
+    ''' bootstrap the app '''
+
+    global BUNDLEDIR, TEMPLATEDIR, QAPP
+
+    setuplogging()
+
+    TEMPLATEDIR = os.path.join(
+        QStandardPaths.standardLocations(QStandardPaths.DocumentsLocation)[0],
+        QAPP.applicationName(), 'templates')
+
+    pathlib.Path(TEMPLATEDIR).mkdir(parents=True, exist_ok=True)
+    # set paths for bundled files
+    if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+        BUNDLEDIR = getattr(sys, '_MEIPASS',
+                            os.path.abspath(os.path.dirname(__file__)))
+    else:
+        BUNDLEDIR = os.path.abspath(os.path.dirname(__file__))
+
+    bundletemplatedir = os.path.join(BUNDLEDIR, 'templates')
+
+    shutil.copytree(bundletemplatedir,
+                    TEMPLATEDIR,
+                    ignore=bootstrap_template_ignore,
+                    dirs_exist_ok=True)
 
 # END FUNCTIONS ####
 
 if __name__ == "__main__":
+
+    # define global variables
+    CURRENTMETA = {'fetchedartist': None, 'fetchedtitle': None}
+
+    bootstrap()
+
+    CONFIG = nowplaying.config.ConfigFile(bundledir=BUNDLEDIR)
+
     TRAY = Tray()
+    QAPP.setQuitOnLastWindowClosed(False)
     exitval = QAPP.exec_()
     logging.info('shutting down %s', __version__)
     sys.exit(exitval)
