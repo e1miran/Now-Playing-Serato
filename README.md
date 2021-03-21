@@ -18,7 +18,9 @@ See the [CHANGELOG](CHANGELOG.md) file.
 
 ## Considerations and Pre-requisites
 
-__Now Playing__ was developed and tested in an environment using a Serato DJ compatible controller.  While it can be used with Serato DJ in DVS mode, this has not been tested. Therefore, behavior regarding the timing of song updates is not known. If song updates occur too quickly with DVS, try the Remote mode.
+__Now Playing__ was developed and tested in an environment using a Serato DJ compatible controller.
+
+*NOTE*: Serato in DVS mode has not been tested. Behavior regarding the timing of song updates is not known. If song updates occur too quickly with DVS, try the Remote mode.
 
 __Only applies when using the Remote Mode to retrieve track data:__
 
@@ -31,40 +33,36 @@ For more info on Serato Live Playlists: https://support.serato.com/hc/en-us/arti
 
 ### Mac
 
-* Download the latest macOS release zip package here: https://github.com/e1miran/Now-Playing-Serato/releases/latest
-* Unzip the package and place the unzipped 'SeratoNowPlaying.app' file in your "Applications" folder or any other location that you desire.
+* Download the latest macOS release zip package [here](releases/latest)
+* Unzip the archive and place the unzipped 'SeratoNowPlaying.app' file in your "Applications" folder or any other location that you desire.
 
 #### *Important note for macOS users*
 
-Due to security measures in macOS Sierra and later, apps downloaded from outside
-of the Mac App Store that are unsigned may have limitations placed on them that
-will prevent them from operating correctly, or even opening at all. The app has
-been verified to open on High Sierra and newer versions of macOS by following the
-steps below. Versions prior to High Sierra have not been verified and are not currently supported.
+Due to security measures in macOS Sierra and later, unsigned apps may have limitations placed on them.  These limitations
+will prevent them from operating correctly or even opening at all. Opening the app on High Sierra and newer versions of macOS by following the
+steps below. Versions before High Sierra have not been verified and are not currently supported.
 
-* Do not unzip the downloaded zip package directly to the folder from where you
-  will be running it. Instead unzip it in a location such as the "Downloads" folder
+* Do not unzip the downloaded zip package directly to the folder from where you will be running it. Instead, unzip it in a location such as the "Downloads" folder
   and then move the 'SeratoNowPlaying.app' to your destination folder (e.g.,
   "Applications"). Then run the app from the destination folder.
-* If after following the step above the app does not open, or you tried running it before
-  moving the app, open Terminal and type:
+* If the app fails to open, try holding down the Control key and then double-clicking open.
+* If after following the step above the app does not open, open Terminal and type:
   ```sudo xattr -r -d com.apple.quarantine /path/to/MyApp.app``` (replace with the correct path to the app).
 
 ### Windows
 
 * Download the latest Windows release zip package here: https://github.com/e1miran/Now-Playing-Serato/releases/latest
 * Unzip the package and copy the entire unzipped folder containing the
-  'SeratoNowPlaying.exe' file and supporting files to the directory you'd like the app to run from (i.e.: C:\Program Files).
+  'SeratoNowPlaying.exe' file and supporting files to the directory you'd like the app to run from (i.e., C:\Program Files).
 
 ## Usage
 
-Start the __Now Playing__ app.from the location where you placed it. On Windows, you may need to right-click and
+Start the __Now Playing__ app from the location where you placed it. On Windows, you may need to right-click and
 select "Run as Administrator'. The app is controlled and configured by accessing the menu from the icon in the
 Windows system tray or Mac menu bar after configuration.
 
-However, the first time you run the app a [Settings](#settings) window will appear. Populate the fields accordingly and press
-save. Once saved, the app will start polling for new songs. The app can be controlled and exited from the system task
-tray on Windows or the menu bar icon on macOS.
+However, the first time you run the app a [Settings](#settings) window will appear. Populate the fields accordingly, and press
+save. Once saved, the app will start polling for new songs. The app can be controlled and exited from the Windows system task tray or the macOS menu bar icon.
 
 ![Task Tray](git-images/systray.png?raw=true) Windows
 
@@ -75,27 +73,26 @@ tray on Windows or the menu bar icon on macOS.
 * __Settings__ - Reconfigure the application after going through the initial configuration.
 See [Settings](#settings) for more information.
 
-* __Oldest/Newest__ - Toggle that determines which mixing mode is currently use.
-  * Oldest mode will pick the oldest track from all decks.  This mode for DJs who are using the
-  the a non-playing deck or will be manually controlling cross-fades.
-  * Newest mode will pick the newest track from all decks.  This mode is useful for pre-built
-  playlists or Serato's AutoDJ mode.
+* __Oldest/Newest__ - Toggle that determines which mixing mode is currently used.
+  * Oldest mode will pick the oldest track from all decks.  This setting for DJs who are using the
+  non-playing deck or will be manually controlling cross-fades.
+  * Newest mode will pick the newest track from all decks.  This setting is helpful for pre-built
+  playlists or Serato's AutoDJ capability.
 
-* __Pause/Unpause__ - Determines whether __Now Playing__ is looking for data and writing updated title
-information.
+* __Pause/Unpause__ - Determines whether __Now Playing__ is looking for data and writing an updated title.
 
 * __Exit__ - Stop and exit __Now Playing__
 
 ### Uninstallation
 
-The process for uninstalling the app is the same on both platforms.  Simply delete the
-file or folder from the location to where you pasted it.  Preferences will be retained in case
-you wish to re-install it.  If you wish to remove those too, then will be in the standard place
-for your particular operating system (AppData for Windows, Library/Preferences for OS X, etc)
+The process for uninstalling the app is the same on both platforms.  Delete the
+file or folder from the location to where you pasted it.  Preferences will be retained
+you wish to re-install it.  If you want to remove those too, they will be in the standard place
+for your particular operating system (AppData for Windows, Library/Preferences for OS X, etc.)
 
 ## Settings
 
-Upon initial execution of the app, a settings window will appear. Subsequently, the settings can be accessed from the icon in the Windows task tray or Mac menu bar.
+Upon initial execution of the app, a settings window will appear. The icon in the Windows task tray or Mac menu bar may be used to access the app settings after this first configuration.
 
 ### General Settings
 
@@ -112,44 +109,41 @@ Upon initial execution of the app, a settings window will appear. Subsequently, 
   * The goal is to retrieve the new track info immediately as it's updated to the Serato website.  However, too short of an interval could affect the website's performance.
 
 * __Notification Indicator__ - Selecting this option will show a system notification when new track info is detected.
-  * This is useful for verifying that the app is actually polling and retrieving data.
-  * The track info will be displayed in the notification.
+  * This is useful for verifying that the app is polling and retrieving data.
+  * The notification displays the track information after detection.
 
-* __File__ - This is the file to which the current track info is written.  You can either pick a pre-existing file or the name of a new file.
+* __File__ - Name of the file where the app will write the track information.  You can either pick a pre-existing file or the name of a new file.
 
-* __TXT Template__ - The [Jinja2 template](https://jinja.palletsprojects.com/en/2.11.x/templates/) file that will be used when the song has been updated. See [More on Template Files](#more-on-template-files) below.
+* __TXT Template__ - The [Jinja2 template](https://jinja.palletsprojects.com/en/2.11.x/templates/) file that will be used when the song updates. See [More on Template Files](#more-on-template-files) below.
 
-* __Write Delay__ - The amount of time, in seconds to delay writing the new track info once it's retrieved. If not populated, it will default to 0 seconds.
-  * A setting of zero will update the track info on screen immediately as a new track is detected.  This may be too soon for some DJ's mixing style, so a delay can be added.
+* __Write Delay__ - The amount of time, in seconds, to delay writing the new track info once it's retrieved. If not populated, it will default to 0 seconds.
+  * A setting of zero will update the track info on-screen immediately as a new track is detected.  This time value may be too soon for some DJ's mixing style. Increasing the write delay allows for much more tuning.
 
 * __HTTP Server Support__ - Enable a local HTTP server that can be used to fetch formatted song information.  Enabling this option requires Now Playing to be restarted to take effect.
 
-* __Port__ - The port that the HTTP server will answer, both on localhost and any remote hosts that may query it.  For security reasons,
-this port should be protected by a firewall to limit which hosts will be permitted to connect.
+* __Port__ - The HTTP server's TCP port.  For security reasons, a firewall should protect this port to limit which hosts will be permitted to connect.
 
-* __HTML Template__ - The [Jinja2 template](https://jinja.palletsprojects.com/en/2.11.x/templates/) file that will be used when the song has been updated. See [More on Template Files](#more-on-template-files) below.
+* __HTML Template__ - The [Jinja2 template](https://jinja.palletsprojects.com/en/2.11.x/templates/) file that will be used when the song updates. See [More on Template Files](#more-on-template-files) below.
 
-* __Server Path__ - Directory to be used to store the web server index file that is created after processing the template.  If this
-field is kept blank, the system temporary directory will be used.
+* __Server Path__ - Directory to store the webserver files.  If
+the field is blank, the app will use a temporary directory.
 
 ### Local Mode
 
 ![Local Mode Settings](git-images/local.png?raw=true)
 
-Local Mode is used when the __Now Playing__ app is running on the same machine as Serato.  Configure the Serato Library Path
-where Serato is located.  This method is the recommended installation as much more information is available and
-__Now Playing__ is generally more reliablely correct.
+When Local Mode is active,  the __Now Playing__ app runs on the same machine as Serato.  Configure the Serato Library Path to Serato's directory, usually `Music/_Serato_`.  This method is the recommended installation as much more information is available and significantly improves __Now Playing__'s correctness.
 
 ### Remote Mode
 
 ![Remote Mode Settings](git-images/remote.png?raw=true)
 
-Remote mode can be used when the streaming PC is not the same as the PC on which Serato DJ is playing but the HTTP Server
+Remote mode is useful when the streaming computer is not the same as the Serato DJ computer but the HTTP Server
 Mode cannot be used.
 
 1. In Serato, make sure you enable Live Playlists and start a new session. From the [Serato website](https://support.serato.com/hc/en-us/articles/228019568-Live-Playlists):
 
-    >"To enable the Live Playlists feature go to the Expansion Pack tab on the Setup screen and check the Enable Live Playlists option. Once enabled, the Start Live Playlist button is now displayed in the History panel. Click this to start and stop your Live Playlist session."
+    >"To enable the Live Playlists feature, go to the Expansion Pack tab on the Setup screen and check the Enable Live Playlists option. Once enabled, the Start Live Playlist button is now displayed in the History panel. Click this to start and stop your Live Playlist session."
 
 2. Once a new playlist session is started, Serato will automatically open your web browser to your Live Playlist. __IMPORTANT:__ You will need to select "Edit Details" on the Live Playlist webpage and change your playlist to "Public", or else the __Now Playing__ app will not be able to retrieve any song data. The webpage does not need to remain open.  So you can close it once you ensure that the playlist has been made public.
 

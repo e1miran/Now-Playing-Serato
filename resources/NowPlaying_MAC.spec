@@ -2,11 +2,10 @@
 
 block_cipher = None
 
-
-a = Analysis(['serato_now_playing.py'],
-             pathex=['/Users/runner/work/Now-Playing-Serato/Now-Playing-Serato'],
+a = Analysis(['now_playing.py'],
+             pathex=['.'],
              binaries=[],
-             datas=[('bin/icon.ico', './bin'),
+             datas=[('resources/icon.ico', './resources'),
                     ('templates/*', 'templates')],
              hiddenimports=[],
              hookspath=[],
@@ -16,18 +15,17 @@ a = Analysis(['serato_now_playing.py'],
              win_private_assemblies=False,
              cipher=block_cipher,
              noarchive=False)
-pyz = PYZ(a.pure, a.zipped_data,
-             cipher=block_cipher)
+pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 exe = EXE(pyz,
-          a.scripts,
-          [],
+          a.scripts, [],
           exclude_binaries=True,
-          name='SeratoNowPlaying',
+          name='NowPlaying',
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
           upx=True,
-          console=False , icon='resources/seratoPlaying.icns')
+          console=False,
+          icon='resources/osx.icns')
 coll = COLLECT(exe,
                a.binaries,
                a.zipfiles,
@@ -35,11 +33,9 @@ coll = COLLECT(exe,
                strip=False,
                upx=True,
                upx_exclude=[],
-               name='SeratoNowPlaying')
+               name='NowPlaying')
 app = BUNDLE(coll,
-             name='SeratoNowPlaying.app',
-             icon='resources/seratoPlaying.icns',
+             name='NowPlaying.app',
+             icon='resources/osx.icns',
              bundle_identifier=None,
-             info_plist={
-                'LSUIElement': True
-             })
+             info_plist={'LSUIElement': True})

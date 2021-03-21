@@ -33,8 +33,8 @@ class ConfigFile:  # pylint: disable=too-many-instance-attributes
             QCoreApplication.applicationName(), 'templates')
         self.bundledir = bundledir
 
-        logging.debug('templatedir at %s', self.templatedir)
-        logging.debug('bundledir at %s', self.bundledir)
+        logging.info('Templates: %s', self.templatedir)
+        logging.info('Bundle: %s', self.bundledir)
 
         self.libpath = os.path.join(
             QStandardPaths.standardLocations(QStandardPaths.MusicLocation)[0],
@@ -52,6 +52,7 @@ class ConfigFile:  # pylint: disable=too-many-instance-attributes
         self.cparser = QSettings(self.qsettingsformat, QSettings.UserScope,
                                  QCoreApplication.organizationName(),
                                  QCoreApplication.applicationName())
+        logging.info('configuration: %s', self.cparser.fileName())
         self.interval = float(10)
         self.delay = float(0)
         self.notif = False
