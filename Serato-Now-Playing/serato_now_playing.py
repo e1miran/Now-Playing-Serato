@@ -269,7 +269,6 @@ class WebHandler(BaseHTTPRequestHandler):
                 self.end_headers()
                 with open('cover.jpg', 'rb') as indexfh:
                     self.wfile.write(indexfh.read())
-                os.unlink('cover.jpg')
                 return
 
         if parsedrequest.path in ['/cover.png']:
@@ -279,7 +278,6 @@ class WebHandler(BaseHTTPRequestHandler):
                 self.end_headers()
                 with open('cover.png', 'rb') as indexfh:
                     self.wfile.write(indexfh.read())
-                os.unlink('cover.png')
                 return
 
         self.send_error(404)
