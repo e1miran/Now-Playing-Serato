@@ -4,4 +4,4 @@
     root of the source tree.
 '''
 
-VERSION = 'v1.5.0-aw-rc1-16-gbe7e724'
+VERSION = 'v1.5.0-rc2'
