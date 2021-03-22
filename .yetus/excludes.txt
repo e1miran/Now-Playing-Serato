@@ -1,1 +1,1 @@
-Serato-Now-Playing/resources/*
+resources/*

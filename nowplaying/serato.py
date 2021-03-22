@@ -586,7 +586,7 @@ class SeratoHandler():
         return None, None
 
     def getremoteplayingtrack(self):
-        ''' get the currently playing song from Live Playlists '''
+        ''' get the currently playing title from Live Playlists '''
 
         if SeratoHandler.mode == 'local':
             logging.debug('in local mode; skipping')
@@ -618,8 +618,8 @@ class SeratoHandler():
         # artist - track
         #
         # The only hope we have is to split on ' - ' and hope that the
-        # artist/song doesn't have a similar split.
-        (artist, song) = tdat.split(' - ', 1)
+        # artist/title doesn't have a similar split.
+        (artist, title) = tdat.split(' - ', 1)
 
         if not artist or artist == '.':
             artist = None
@@ -628,17 +628,17 @@ class SeratoHandler():
 
         SeratoHandler.playingadat.artist = artist
 
-        if not song or song == '.':
-            song = None
+        if not title or title == '.':
+            title = None
         else:
-            song = song.strip()
+            title = title.strip()
 
-        SeratoHandler.playingadat.title = song
+        SeratoHandler.playingadat.title = title
 
-        if not song and not artist:
+        if not title and not artist:
             SeratoHandler.playingadat = ChunkTrackADAT()
 
-        return artist, song
+        return artist, title
 
     def getplayingtrack(self):
         ''' generate a dict of data '''
@@ -677,7 +677,7 @@ def main():
     if seratohandler.playingadat:
         seratohandler.playingadat.importantvalues()
     else:
-        print('No song currently suspecting of playing.')
+        print('No title currently suspecting of playing.')
 
 
 if __name__ == "__main__":

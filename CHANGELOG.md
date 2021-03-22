@@ -1,16 +1,24 @@
 
 # Changelog
 
-## Version 1.5.0 - Unreleased
+## In progress - Unreleased
 
+* Main program name change: SeratoNowPlaying -> NowPlaying
 * Fixed licensing
+* No longer need to pre-create the text file that gets written.
 * New HTTP Server built for users who need fade-in/fade-out and other effects
 * Rewritten local mode:
   * Cover art in HTTP mode
   * Better character encoding for non-Latin titles
-  * Oldest and Newest modes for picking the oldest or newest deck
-  * Significantly more data available
-* Templated output instead of hard-coded output settings
+  * Oldest and Newest modes for picking the oldest or newest
+    track loaded on a deck
+  * Significantly more data available to write out!
+* Templated output instead of hard-coded output settings. Upon first
+  launch, a new NowPlaying directory will appear in your Documents folder.
+  Inside that will be a templates directory that has the example
+  templates.
+* Logging infrastructure to help debug: currently turned down. Future
+  versions will have the ability to crank up the noise.
 * Configuration system has been completely revamped.
   * Settings will now survive between software upgrades.
   * Added a 'Reset' button to get you back to defaults.

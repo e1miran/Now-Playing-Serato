@@ -16,6 +16,8 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - name: setup python
         uses: actions/setup-python@v2
         with:
@@ -26,28 +28,34 @@ jobs:
           source /tmp/venv/bin/activate
           python3 -m pip install --upgrade pip
           pip install -r requirements.txt
+      - name: generate version
+        shell: bash
+        run: ./generate_version.sh
       - name: pyinstaller
         run: |
-          cd Serato-Now-Playing
-          cp resources/SeratoNowPlaying_MAC.spec SeratoNowPlaying_MAC.spec
-          /tmp/venv/bin/pyinstaller -w SeratoNowPlaying_MAC.spec
+          cp resources/NowPlaying_MAC.spec .
+          /tmp/venv/bin/pyinstaller -w NowPlaying_MAC.spec
       - name: manipulate the dist
         run: |
-          pwd
-          cd Serato-Now-Playing/dist
-          zip -r SeratoNowPlaying.zip SeratoNowPlaying.app
-          rm -rf SeratoNowPlaying SeratoNowPlaying.app
+          cp -p CHANGELOG* README* LICENSE dist
+          cd dist
+          rm -rf NowPLaying
+          zip -r NowPlaying.zip .
       - name: artifact dist
         uses: actions/upload-artifact@v2
         with:
           name: mac-dist
-          path: Serato-Now-Playing/dist/
+          path: dist/NowPlaying.zip
 
   pyinstaller-win:
     runs-on: windows-2019
     steps:
       - name: checkout
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: update tags
+        run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
       - name: setup python
         uses: actions/setup-python@v2
         with:
@@ -56,15 +64,18 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-      - name: stuff
-        run: pwd
+      - name: generate version
+        shell: bash
+        run: ./generate_version.sh
       - name: pyinstaller
         run: |
-          cd Serato-Now-Playing
-          COPY resources\\SeratoNowPlaying_WIN.spec SeratoNowPlaying_WIN.spec
-          pyinstaller -F -w SeratoNowPlaying_WIN.spec
+          copy resources\\NowPlaying_WIN.spec .
+          pyinstaller -F -w NowPlaying_WIN.spec
+          copy CHANGELOG*.* dist
+          copy README*.* dist
+          copy LICENSE dist\\LICENSE.txt
       - name: artifact dist
         uses: actions/upload-artifact@v2
         with:
           name: win-dist
-          path: Serato-Now-Playing\\dist\\SeratoNowPlaying.exe
+          path: dist\\

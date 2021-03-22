@@ -2,11 +2,10 @@
 
 block_cipher = None
 
-
-a = Analysis(['serato_now_playing.py'],
-             pathex=['C:\\Users\\runner\\work\\Now-Playing-Serato\\Now-Playing-Serato'],
+a = Analysis(['now_playing.py'],
+             pathex=['.'],
              binaries=[],
-             datas=[('bin/icon.ico', './bin'),
+             datas=[('resources\\icon.ico', 'resources'),
                     ('templates\\*', 'templates')],
              hiddenimports=[],
              hookspath=[],
@@ -16,19 +15,18 @@ a = Analysis(['serato_now_playing.py'],
              win_private_assemblies=False,
              cipher=block_cipher,
              noarchive=False)
-pyz = PYZ(a.pure, a.zipped_data,
-             cipher=block_cipher)
+pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 exe = EXE(pyz,
           a.scripts,
           a.binaries,
           a.zipfiles,
-          a.datas,
-          [],
-          name='SeratoNowPlaying',
+          a.datas, [],
+          name='NowPlaying',
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
           upx=True,
           upx_exclude=[],
           runtime_tmpdir=None,
-          console=False , icon='resources\\seratoPlaying.ico')
+          console=False,
+          icon='resources\\windows.ico')

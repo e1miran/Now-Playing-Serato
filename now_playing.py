@@ -36,10 +36,7 @@ import nowplaying.config
 import nowplaying.serato
 import nowplaying.settingsui
 import nowplaying.utils
-
-__author__ = "Ely Miranda"
-__version__ = "1.5.0"
-__license__ = "MIT"
+import nowplaying.version
 
 QAPP = QApplication(sys.argv)
 QAPP.setOrganizationName('com.github.em1ran')
@@ -56,10 +53,10 @@ TRAY = None
 class Tray:  # pylint: disable=too-many-instance-attributes
     ''' System Tray object '''
     def __init__(self):
-        global __version__, CONFIG
+        global CONFIG
+        self.version = nowplaying.version.VERSION
         self.settingswindow = nowplaying.settingsui.SettingsUI(
-            tray=self, config=CONFIG, version=__version__)
-        ''' create systemtray UI '''
+            tray=self, config=CONFIG, version=self.version)
         self.icon = QIcon(CONFIG.iconfile)
         self.tray = QSystemTrayIcon()
         self.tray.setIcon(self.icon)
@@ -68,7 +65,7 @@ class Tray:  # pylint: disable=too-many-instance-attributes
         self.menu = QMenu()
 
         # create systemtray options and actions
-        self.action_title = QAction(f'Now Playing v{__version__}')
+        self.action_title = QAction(f'Now Playing {self.version}')
         self.menu.addAction(self.action_title)
         self.action_title.setEnabled(False)
 
@@ -351,7 +348,6 @@ class WebServer(QThread):
                     pathlib.Path(self.prevdir).mkdir(parents=True,
                                                      exist_ok=True)
                 except Exception as error:  # pylint: disable=broad-except
-                    print(f'webserver error: {error}')
                     logging.error('Web server threw exception! %s', error)
                     self.webenable.emit(False)
 
@@ -373,7 +369,6 @@ class WebServer(QThread):
                     self.server = ThreadingWebServer(
                         ('0.0.0.0', CONFIG.httpport), WebHandler)
                 except Exception as error:  # pylint: disable=broad-except
-                    print(f'webserver error: {error}')
                     logging.error('Web server threw exception! %s', error)
                     self.webenable.emit(False)
 
@@ -505,20 +500,20 @@ def gettrack(configuration):  # pylint: disable=too-many-branches
         return None
 
     logging.debug('getplayingtrack called')
-    (artist, song) = serato.getplayingtrack()
+    (artist, title) = serato.getplayingtrack()
 
-    if not artist and not song:
+    if not artist and not title:
         logging.debug('getplaying track was None; returning')
         return None
 
     if artist == CURRENTMETA['fetchedartist'] and \
-       song == CURRENTMETA['fetchedtitle']:
+       title == CURRENTMETA['fetchedtitle']:
         logging.debug('getplaying was existing meta; returning')
         return None
 
     logging.debug('Fetching more metadata from serato')
     nextmeta = serato.getplayingmetadata()
-    nextmeta['fetchedtitle'] = song
+    nextmeta['fetchedtitle'] = title
     nextmeta['fetchedartist'] = artist
 
     if 'filename' in nextmeta:
@@ -526,6 +521,7 @@ def gettrack(configuration):  # pylint: disable=too-many-branches
         nextmeta = nowplaying.utils.getmoremetadata(nextmeta)
 
     CURRENTMETA = nextmeta
+    logging.info('New track: %s / %s', CURRENTMETA['artist'], CURRENTMETA['title'])
 
     return CURRENTMETA
 
@@ -550,13 +546,14 @@ def setuplogging():
         logfhandler.doRollover()
 
     # this loglevel should eventually be tied into config
-    # but for now, hard-set at debug
+    # but for now, hard-set at info
     logging.basicConfig(
         format='%(asctime)s %(threadName)s %(module)s:%(funcName)s:%(lineno)d ' +
         '%(levelname)s %(message)s',
         datefmt='%Y-%m-%dT%H:%M:%S%z',
         handlers=[logfhandler],
-        level=logging.DEBUG)
+        level=logging.INFO)
+    logging.info('starting up %s', nowplaying.version.VERSION)
 
 def bootstrap_template_ignore(srcdir, srclist):  # pylint: disable=unused-argument
     ''' do not copy template files that already exist '''
@@ -613,5 +610,6 @@ if __name__ == "__main__":
     TRAY = Tray()
     QAPP.setQuitOnLastWindowClosed(False)
     exitval = QAPP.exec_()
-    logging.info('shutting down %s', __version__)
+    logging.info('shutting down %s', nowplaying.version.VERSION)
+    time.sleep(1)
     sys.exit(exitval)
