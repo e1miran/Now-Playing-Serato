@@ -13,8 +13,8 @@ import threading
 import time
 import urllib.parse
 
-from PyQt5.QtCore import \
-                            pyqtSignal, \
+from PySide2.QtCore import \
+                            Signal, \
                             QThread
 
 CONFIG = None
@@ -114,7 +114,7 @@ class ThreadingWebServer(ThreadingMixIn, HTTPServer):
 class WebServer(QThread):
     ''' Now Playing built-in web server using custom handler '''
 
-    webenable = pyqtSignal(bool)
+    webenable = Signal(bool)
 
     def __init__(self, parent=None, config=None):
         global CONFIG  # pylint: disable=global-statement
@@ -162,6 +162,12 @@ class WebServer(QThread):
             while CONFIG.paused or not CONFIG.httpenabled:
                 time.sleep(5)
                 CONFIG.get()
+                if self.endthread:
+                    break
+
+            if self.endthread:
+                self.stop()
+                break
 
             if CONFIG.usinghttpdir:
                 logging.info('Using web server dir %s', CONFIG.usinghttpdir)

@@ -7,9 +7,9 @@ import pathlib
 import socket
 
 # pylint: disable=no-name-in-module
-from PyQt5.QtCore import Qt
+from PySide2.QtCore import Qt
 
-from PyQt5.QtWidgets import \
+from PySide2.QtWidgets import \
                             QCheckBox, \
                             QComboBox, \
                             QFileDialog, \
@@ -22,7 +22,7 @@ from PyQt5.QtWidgets import \
                             QScrollArea,\
                             QVBoxLayout, \
                             QWidget
-from PyQt5.QtGui import QIcon, QFont
+from PySide2.QtGui import QIcon, QFont
 
 
 # settings UI
