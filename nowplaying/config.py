@@ -9,7 +9,7 @@ import sys
 import threading
 
 # pylint: disable=no-name-in-module
-from PyQt5.QtCore import QCoreApplication, QSettings, QStandardPaths, QThread
+from PySide2.QtCore import QCoreApplication, QSettings, QStandardPaths
 
 
 class ConfigFile:  # pylint: disable=too-many-instance-attributes
@@ -81,7 +81,7 @@ class ConfigFile:  # pylint: disable=too-many-instance-attributes
 
     def reset(self):
         ''' forcibly go back to defaults '''
-        logging.debug('by thread %u', QThread.currentThreadId())
+        logging.debug('config reset')
         self.__init__(bundledir=self.bundledir, reset=True)
 
     def get(self):
@@ -152,7 +152,7 @@ class ConfigFile:  # pylint: disable=too-many-instance-attributes
 
     def defaults(self):
         ''' default values for things '''
-        logging.debug('by thread %u', QThread.currentThreadId())
+        logging.debug('set defaults')
 
         settings = QSettings(self.qsettingsformat, QSettings.SystemScope,
                              QCoreApplication.organizationName(),

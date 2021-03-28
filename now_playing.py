@@ -16,18 +16,18 @@ import sys
 import threading
 import time
 
-from PyQt5.QtCore import \
-                            pyqtSignal, \
+from PySide2.QtCore import \
+                            Signal, \
                             QStandardPaths, \
                             QThread
-from PyQt5.QtWidgets import \
+from PySide2.QtWidgets import \
                             QAction, \
                             QActionGroup, \
                             QApplication, \
                             QErrorMessage, \
                             QMenu, \
                             QSystemTrayIcon
-from PyQt5.QtGui import QIcon
+from PySide2.QtGui import QIcon
 
 import nowplaying.config
 import nowplaying.serato
@@ -200,10 +200,15 @@ class Tray:  # pylint: disable=too-many-instance-attributes
         global CONFIG
 
         self.tray.setVisible(False)
-
+        self.trackthread.endthread = True
+        self.trackthread.exit()
+        self.webthread.endthread = True
+        self.webthread.stop()
         if CONFIG.file:
             nowplaying.utils.writetxttrack(filename=CONFIG.file, clear=True)
         # calling exit should call __del__ on all of our QThreads
+        self.trackthread.wait()
+        self.webthread.wait()
         QAPP.exit(0)
 
 
@@ -214,7 +219,7 @@ class TrackPoll(QThread):
         song has changed for notification
     '''
 
-    currenttrack = pyqtSignal(dict)
+    currenttrack = Signal(dict)
 
     def __init__(self, parent=None):
         QThread.__init__(self, parent)
@@ -449,5 +454,4 @@ if __name__ == "__main__":
     QAPP.setQuitOnLastWindowClosed(False)
     exitval = QAPP.exec_()
     logging.info('shutting down %s', nowplaying.version.VERSION)
-    time.sleep(1)
     sys.exit(exitval)
