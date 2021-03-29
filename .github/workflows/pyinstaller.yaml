@@ -37,7 +37,7 @@ jobs:
           /tmp/venv/bin/pyinstaller -w NowPlaying_MAC.spec
       - name: manipulate the dist
         run: |
-          cp -p CHANGELOG* README* LICENSE dist
+          cp -p CHANGELOG* README* LICENSE.txt NOTICE.txt dist
           cd dist
           rm -rf NowPLaying
           zip -r NowPlaying.zip .
@@ -73,7 +73,8 @@ jobs:
           pyinstaller -F -w NowPlaying_WIN.spec
           copy CHANGELOG*.* dist
           copy README*.* dist
-          copy LICENSE dist\\LICENSE.txt
+          copy LICENSE.txt dist\\LICENSE.txt
+          copy NOTICE.txt dist\\NOTICE.txt
       - name: artifact dist
         uses: actions/upload-artifact@v2
         with:
