@@ -148,7 +148,7 @@ class Tray:  # pylint: disable=too-many-instance-attributes
                 title = ''
 
             tip = f'{artist} - {title}'
-            self.tray.showMessage('Now Playing ▶ ', tip, 0)
+            self.tray.showMessage('Now Playing ▶ ', tip)
 
     def webenable(self, status):
         ''' If the web server gets in trouble, we need to tell the user '''
