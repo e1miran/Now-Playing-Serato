@@ -9,10 +9,12 @@ import platform
 import sys
 
 import pkg_resources
+from pyinstaller_versionfile import create_version_file
 import nowplaying.version
 
 NUMERICDATE = datetime.datetime.utcnow().strftime("%Y%m%d%H%M%S")
 VERSION = nowplaying.version.get_versions()['version']
+WINVERSFILE = os.path.join('bincomponents', 'winvers.bin')
 
 
 def geticon():
@@ -74,6 +76,27 @@ def osxminimumversion():
         versions '''
     return platform.mac_ver()[0]
 
+
+def windows_version_file():
+    ''' create a windows version file
+        version field: MAJOR.MINOR.MICRO.0
+        copyright: actual version
+        '''
+
+    versionparts = getsplitversion()
+    version = '.'.join(versionparts[0:3] + ['0'])
+    rawmetadata = {
+        'CompanyName': 'NowPlaying',
+        'FileDescription': 'Titling for DJs - https://github.com/aw-was-here/Now-Playing-Serato',
+        'InternalName': 'NowPlaying',
+        'LegalCopyright': f'{VERSION} (c) 2020-2021 Ely Miranda, (c) 2021 Allen Wittenauer',
+        'OriginalFilename': 'NowPlaying.exe',
+        'ProductName': 'Now Playing',
+        'Version': version
+    }
+    metadata = create_version_file.MetaData(metadata_file='fake')
+    metadata._metadata = rawmetadata # pylint: disable=protected-access
+    metadata._render_version_file(outfile=WINVERSFILE) # pylint: disable=protected-access
 
 def Entrypoint(dist, group, name, **kwargs):
     ''' Calculate the location of main() '''
@@ -164,6 +187,7 @@ if sys.platform == 'darwin':
         })
 
 else:
+    windows_version_file()
     exe = EXE(  # pylint: disable=undefined-variable
         pyz,
         a.scripts,
@@ -178,4 +202,6 @@ else:
         upx_exclude=[],
         runtime_tmpdir=None,
         console=False,
+        version=WINVERSFILE,
         icon='bincomponents/' + geticon())
+    os.unlink(WINVERSFILE)
