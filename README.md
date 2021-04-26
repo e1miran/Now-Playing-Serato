@@ -1,3 +1,5 @@
+## This repo is no longer being maintained or updated. Please visit the forked repo that has wonderfully built on and added to _Now Playing_: https://github.com/aw-was-here/Now-Playing-Serato
+
 # __Now Playing__ in Serato ![Menu Bar Image](https://github.com/e1miran/Now-Playing-Serato/blob/master/git-images/seratoPlaying.png?raw=true) 
 __Now Playing__ is a tool written in Python to retrieve the current/last played song in Serato DJ.  
 
