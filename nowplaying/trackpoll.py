@@ -3,6 +3,7 @@
 
 import logging
 import threading
+import traceback
 
 from PySide2.QtCore import Signal, QThread  # pylint: disable=no-name-in-module
 
@@ -56,7 +57,11 @@ class TrackPoll(QThread):  # pylint: disable=too-many-instance-attributes
                     f'nowplaying.inputs.{previousinput}'].Plugin()
                 logging.debug('Starting %s plugin', previousinput)
                 self.input.start()
-            self.gettrack()
+            try:
+                self.gettrack()
+            except Exception as error:  #pylint: disable=broad-except
+                logging.debug('Failed attempting to get a track: %s', error)
+                logging.debug(traceback.print_stack())
 
     def __del__(self):
         logging.debug('TrackPoll is being killed!')
