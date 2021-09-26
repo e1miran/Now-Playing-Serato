@@ -280,10 +280,12 @@ class ConfigFile:  # pylint: disable=too-many-instance-attributes
     def pause(self):  # pylint: disable=no-self-use
         ''' Pause system '''
         ConfigFile.PAUSED = True
+        logging.warning('NowPlaying is currently paused.')
 
     def unpause(self):  # pylint: disable=no-self-use
         ''' unpause system '''
         ConfigFile.PAUSED = False
+        logging.warning('NowPlaying is no longer paused.')
 
     def getpause(self):  # pylint: disable=no-self-use
         ''' Get the pause status '''
