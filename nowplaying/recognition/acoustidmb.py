@@ -133,7 +133,7 @@ class Plugin(RecognitionPlugin):
                             elif isinstance(artist, str):
                                 albumartist = artist
                             if albumartist == 'Various Artists':
-                                score = score - .20
+                                score = score - .10
                             elif albumartist and self._simplestring(
                                     albumartist) in fnstr:
                                 score = score + .20
