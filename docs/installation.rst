@@ -22,7 +22,7 @@ Mac
 ---
 
 * Download the latest macOS release zip package
-  `here <https://github.com/whatsnowplaying/whats-now-playing/releases/latest>`_.
+  `here <https://github.com/whatsnowplaying/whats-now-playing/releases>`_.
 * Unzip the archive and place the unzipped ``NowPlaying.app`` file in your ``Applications``
   folder or any other location that you desire.
 
@@ -48,7 +48,7 @@ Windows
 -------
 
 * Download the latest Windows release zip package
-  `here <https://github.com/whatsnowplaying/whats-now-playing/releases/latest>`_.
+  `here <https://github.com/whatsnowplaying/whats-now-playing/releases>`_.
 * Unzip the package and copy the entire unzipped folder containing the
   ``NowPlaying.exe`` file and supporting files to the directory you'd like the app to
   run from (i.e., ``C:\Program Files``).
