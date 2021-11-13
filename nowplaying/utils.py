@@ -152,24 +152,32 @@ def image2png(rawdata):
 def songpathsubst(config, filename):
     ''' if needed, change the pathing of a file '''
 
+    origfilename = filename
+
     if not config.cparser.value('quirks/filesubst', type=bool):
         return filename
 
+    slashmode = config.cparser.value('quirks/slashmode')
+
+    if slashmode == 'toforward':
+        newname = filename.replace('\\', '/')
+        filename = newname
+    elif slashmode == 'toback':
+        newname = filename.replace('/', '\\')
+        filename = newname
+
     songin = config.cparser.value('quirks/filesubstin')
-    if not songin:
-        logging.error('File substitution requested, but no starting path.')
-        return filename
+    if songin:
+        songout = config.cparser.value('quirks/filesubstout')
+        if not songout:
+            songout = ''
 
-    songout = config.cparser.value('quirks/filesubstout')
-    if not songout:
-        songout = ''
+        try:
+            newname = filename.replace(songin, songout)
+        except Exception as error:  # pylint: disable=broad-except
+            logging.error('Unable to do path replacement (%s -> %s on %s): %s',
+                          songin, songout, filename, error)
+            return filename
 
-    try:
-        newname = filename.replace(songin, songout)
-    except Exception as error:  # pylint: disable=broad-except
-        logging.error('Unable to do path replacement (%s -> %s on %s): %s',
-                      songin, songout, filename, error)
-        return filename
-
-    logging.debug('filename substitution: %s -> %s', filename, newname)
+    logging.debug('filename substitution: %s -> %s', origfilename, newname)
     return newname
