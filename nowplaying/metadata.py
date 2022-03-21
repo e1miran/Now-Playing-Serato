@@ -167,6 +167,12 @@ class MetadataProcessors:  # pylint: disable=too-few-public-methods
                         tag, key):
                     self.metadata[key] = getattr(tag, key)
 
+            if getattr(tag, 'extra'):
+                extra = getattr(tag, 'extra')
+                for key in ['isrc']:
+                    if extra.get(key):
+                        self.metadata[key] = extra[key]
+
             if 'date' not in self.metadata and hasattr(
                     tag, 'year') and getattr(tag, 'year'):
                 self.metadata['date'] = getattr(tag, 'year')
@@ -216,13 +222,13 @@ class MetadataProcessors:  # pylint: disable=too-few-public-methods
                 addmeta = musicbrainz.recordingid(
                     self.metadata['musicbrainzrecordingid'])
                 self._recognition_replacement(addmeta)
-        elif 'isrc' in self.metadata:
+        elif self.metadata.get('isrc'):
             logging.debug('Preprocessing with musicbrainz isrc')
             musicbrainz = nowplaying.musicbrainz.MusicBrainzHelper(
                 config=self.config)
             metalist = musicbrainz.providerinfo()
             if any(meta not in self.metadata for meta in metalist):
-                addmeta = musicbrainz.isrc(self.metadata['isrc'])
+                addmeta = musicbrainz.isrc(self.metadata['isrc'].split('/'))
                 self._recognition_replacement(addmeta)
 
         for plugin in self.config.plugins['recognition']:
