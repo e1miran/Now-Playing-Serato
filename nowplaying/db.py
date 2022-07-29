@@ -147,7 +147,7 @@ class MetadataDB:
             # toss any keys we do not care about
             mdcopy = filterkeys(mdcopy)
 
-            connection =         cursor = connection.cursor()
+            cursor = connection.cursor()
 
             logging.debug('Adding record with %s/%s', mdcopy['artist'],
                           mdcopy['title'])
@@ -199,7 +199,6 @@ class MetadataDB:
         if not self.databasefile:
             logging.error('No dbfile')
             sys.exit(1)
-
 
         pathlib.Path(os.path.dirname(self.databasefile)).mkdir(parents=True,
                                                                exist_ok=True)
