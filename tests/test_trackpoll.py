@@ -24,6 +24,7 @@ def trackpollbootstrap(bootstrap, tmp_path):  # pylint: disable=redefined-outer-
         pathlib.Path(txtfile).unlink()
     config = bootstrap
     config.cparser.setValue('textoutput/file', str(txtfile))
+    config.cparser.setValue('artistextras/enabled', False)
     config.file = str(txtfile)
     config.cparser.sync()
     yield config
@@ -50,11 +51,11 @@ def wait_for_output(filename):
     # runners so add some protection
     QThread.msleep(2000)
     counter = 0
-    while (not pathlib.Path(filename).exists()) or counter > 5:
+    while counter < 5 and not pathlib.Path(filename).exists():
         QThread.msleep(2000)
         counter += 1
         logging.debug('waiting for %s: %s', filename, counter)
-    assert counter < 6
+    assert counter < 5
 
 
 def tracknotify(metadata):

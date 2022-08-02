@@ -97,6 +97,16 @@ class UpgradeConfig:
             logging.debug('new install!')
             return
 
+        # these got moved in 3.1.0
+        npsqldb = pathlib.Path(
+            QStandardPaths.standardLocations(
+                QStandardPaths.CacheLocation)[0]).joinpath('npsql.db')
+        npsqldb.unlink(missing_ok=True)
+        webdb = pathlib.Path(
+            QStandardPaths.standardLocations(
+                QStandardPaths.CacheLocation)[0]).joinpath('web.db')
+        webdb.unlink(missing_ok=True)
+
         try:
             oldversstr = config.value('settings/configversion',
                                       defaultValue='2.0.0')
@@ -271,11 +281,11 @@ def upgrade(bundledir=None):
     myupgrade = UpgradeTemplates(bundledir=bundledir)
 
 
-def setuplogging(logpath=None):
+def setuplogging(logpath=None, rotate=False):
     ''' configure logging '''
     besuretorotate = False
 
-    if os.path.exists(logpath):
+    if os.path.exists(logpath) and rotate:
         besuretorotate = True
 
     logfhandler = logging.handlers.RotatingFileHandler(filename=logpath,
@@ -293,5 +303,3 @@ def setuplogging(logpath=None):
         datefmt='%Y-%m-%dT%H:%M:%S%z',
         handlers=[logfhandler],
         level=logging.DEBUG)
-    logging.info('starting up v%s',
-                 nowplaying.version.get_versions()['version'])

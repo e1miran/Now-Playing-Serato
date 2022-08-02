@@ -71,9 +71,7 @@ class MetadataDB:
         'album',
         'albumartist',
         'artist',
-        'artistbio',
-        'artistlogo',
-        'artistthumb',
+        'artistlongbio',
         'bitrate',
         'bpm',
         'comments',
@@ -82,13 +80,13 @@ class MetadataDB:
         'date',
         'deck',
         'disc',
-        'discsubtitle',
         'disc_total',
+        'discsubtitle',
         'filename',
         'genre',
         'hostfqdn',
-        'hostname',
         'hostip',
+        'hostname',
         'httpport',
         'isrc',
         'key',
@@ -103,16 +101,25 @@ class MetadataDB:
         'track_total',
     ]
 
+    # NOTE: artistfanartraw is never actually stored in this DB
+    # but putting it here triggers side-effects to force it to be
+    # treated as binary
+    METADATABLOBLIST = [
+        'artistbannerraw', 'artistfanartraw', 'artistlogoraw',
+        'artistthumbraw', 'coverimageraw'
+    ]
+
     def __init__(self, databasefile=None, initialize=False):
 
         if databasefile:
-            self.databasefile = databasefile
+            self.databasefile = pathlib.Path(databasefile)
         else:  # pragma: no cover
-            self.databasefile = os.path.join(
+            self.databasefile = pathlib.Path(
                 QStandardPaths.standardLocations(
-                    QStandardPaths.CacheLocation)[0], 'npsql.db')
+                    QStandardPaths.CacheLocation)[0]).joinpath(
+                        'metadb', 'npsql.db')
 
-        if not os.path.exists(self.databasefile) or initialize:
+        if not self.databasefile.exists() or initialize:
             logging.debug('Setting up a new DB')
             self.setupsql()
 
@@ -126,8 +133,8 @@ class MetadataDB:
         def filterkeys(mydict):
             return {
                 key: mydict[key]
-                for key in MetadataDB.METADATALIST + ['coverimageraw']
-                if key in mydict
+                for key in MetadataDB.METADATALIST +
+                MetadataDB.METADATABLOBLIST if key in mydict
             }
 
         logging.debug('Called write_to_metadb')
@@ -136,13 +143,14 @@ class MetadataDB:
             logging.debug('metadata is either empty or too incomplete')
             return
 
-        if not os.path.exists(self.databasefile):
+        if not self.databasefile.exists():
             self.setupsql()
 
         with sqlite3.connect(self.databasefile) as connection:
             # do not want to modify the original dictionary
             # otherwise Bad Things(tm) will happen
             mdcopy = copy.deepcopy(metadata)
+            mdcopy['artistfanartraw'] = None
 
             # toss any keys we do not care about
             mdcopy = filterkeys(mdcopy)
@@ -152,8 +160,9 @@ class MetadataDB:
             logging.debug('Adding record with %s/%s', mdcopy['artist'],
                           mdcopy['title'])
 
-            if 'coverimageraw' not in mdcopy:
-                mdcopy['coverimageraw'] = None
+            for key in MetadataDB.METADATABLOBLIST:
+                if key not in mdcopy:
+                    mdcopy[key] = None
 
             for data in mdcopy:
                 if isinstance(mdcopy[data], str) and len(mdcopy[data]) == 0:
@@ -163,12 +172,13 @@ class MetadataDB:
             sql += ', '.join(mdcopy.keys()) + ') VALUES ('
             sql += '?,' * (len(mdcopy.keys()) - 1) + '?)'
 
-            cursor.execute(sql, tuple(list(mdcopy.values())))
+            datatuple = tuple(list(mdcopy.values()))
+            cursor.execute(sql, datatuple)
 
     def read_last_meta(self):
         ''' update metadb '''
 
-        if not os.path.exists(self.databasefile):
+        if not self.databasefile.exists():
             logging.error('MetadataDB does not exist yet?')
             return None
 
@@ -186,9 +196,10 @@ class MetadataDB:
                 return None
 
             metadata = {data: row[data] for data in MetadataDB.METADATALIST}
-            metadata['coverimageraw'] = row['coverimageraw']
-            if not metadata['coverimageraw']:
-                del metadata['coverimageraw']
+            for key in MetadataDB.METADATABLOBLIST:
+                metadata[key] = row[key]
+                if not metadata[key]:
+                    del metadata[key]
 
             metadata['dbid'] = row['id']
         return metadata
@@ -200,21 +211,17 @@ class MetadataDB:
             logging.error('No dbfile')
             sys.exit(1)
 
-        pathlib.Path(os.path.dirname(self.databasefile)).mkdir(parents=True,
-                                                               exist_ok=True)
-        if os.path.exists(self.databasefile):
+        self.databasefile.parent.mkdir(parents=True, exist_ok=True)
+        if self.databasefile.exists():
             logging.info('Clearing cache file %s', self.databasefile)
             os.unlink(self.databasefile)
 
         with sqlite3.connect(self.databasefile) as connection:
-            logging.info('Create cache db file %s', self.databasefile)
             cursor = connection.cursor()
 
             sql = 'CREATE TABLE currentmeta (id INTEGER PRIMARY KEY AUTOINCREMENT, '
-            sql += ' TEXT, '.join(MetadataDB.METADATALIST)
-            sql += ' TEXT,  coverimageraw BLOB'
-            sql += ')'
+            sql += ' TEXT, '.join(MetadataDB.METADATALIST) + ' TEXT, '
+            sql += ' BLOB, '.join(MetadataDB.METADATABLOBLIST) + ' BLOB)'
 
             cursor.execute(sql)
-
             logging.debug('Cache db file created')
