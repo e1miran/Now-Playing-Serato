@@ -3,6 +3,7 @@ Artist Extras
 
    WARNING: This feature is still in an experimental stage.
 
+   IMPORTANT: Many settings in this section currently require a restart of the software in order to take effect.
 
 Need some extra content for audio-only DJing?  The artist extras plug-ins allow for
 near real-time downloads of banners, logos, thumbnails, and fan art based upon the
@@ -19,16 +20,16 @@ artists of the track that is currently playing.
 Notes:
 
   - Raw image URLs are not scaled and represent the original format as downloaded.
-  - Most fan art tends to be in widescreen.
-  - Enabling this feature may cause a slowdown during the Exit of the app in order to save work.
+  - Enabling this feature may cause a slowdown during the Exit of the app in order to save work in progress.
+  - Tracks with multiple artists will download both sets of images. However, only one will be used for fanart,
+    banners, and logos.
 
-Additionally, a biography of the artist may now be provided in the 'artistlongbio' macro. These biographies are
-also written by fans and may be brief or fairly detailed.
-
+Additionally, a biography of the artist may also be available. These biographies are
+also written by fans and may be brief or fairly detailed. The 'artistlongbio' value has the full content whereas the
+'artistshortbio' has only the content that will fit in a single Twitch chat message.
 
 Timing
 ------
-
 
 Most of the content is downloaded during the write delay time period as set in the
 `general settings <../settings.html>`_ . You may need to bump up the delay to give enough time to not have
@@ -40,7 +41,6 @@ Most of the content is downloaded during the write delay time period as set in t
 * Fanart will start to download next and will rotate during the entire time that artist is being played.
 * Switching to a different track from the same artist pick new banners, logos, and thumbnails if they are available.
 * Collaborations will attempt (but it is not guaranteed!) to pull extras for both artists if the metadata of the track has more than one set of artists listed. For example, a track labeled with both David Bowie and Lou Reed should have both Bowie and Reed's images.
-
 
 Generic Settings
 ----------------
@@ -60,7 +60,8 @@ Download processes: The number of background processes to run that do nothing bu
 art and update the backend storage.  This number should be configured high enough to get all
 of the first pass of downloads done quickly but low enough that it doesn't overwhelm
 
-
+The 'Clear Cache' button will remove all mappings between artists and images.  It does not remove the
+cached responses from the web server in order to save bandwidth.
 
 Discogs
 -------
@@ -70,8 +71,8 @@ Provides: Biographies, Fan art, and Thumbnails
 `Discogs <https://www.discogs.com>`_ is a well-known source for music release information, a
 marketplace, and more. Be aware of Discogs Terms of Use as linked to on
 their `API Page <https://www.discogs.com/developers>`_. All you need to do is
-`Get a personal access token <https://www.discogs.com/settings/developers>`_.
-
+`Get a personal access token <https://www.discogs.com/settings/developers>`_. Discogs uses a
+pure text-search; results may be somewhat unreliable.
 
 fanart.tv
 -----------
@@ -80,8 +81,7 @@ Provides: Banners, Fan art, Logos, and Thumbnails
 
 `fanart.tv <https://www.fanart.tv>`_ is a community project to provide high quality
 artwork for music and other media. It requires music be tagged with
-`MusicBrainz <https://www.musicbrainz.org>`_ artist ids or for the audio recognition
-system to try to find them for you in real-time. You will need a
+`MusicBrainz <https://www.musicbrainz.org>`_ artist ids. You will need a
 `Fanart API Key <https://fanart.tv/get-an-api-key/>`_ in order to use this service.
 
 
