@@ -65,41 +65,49 @@ class MetadataProcessors:  # pylint: disable=too-few-public-methods
             self.metadata[key] = value
 
     def _process_audio_metadata_mp4_freeform(self, freeformparentlist):
+
+        def _itunes(tempdata, freeform):
+            convdict = {
+                'LABEL': 'label',
+                'originaldate': 'date',
+                'DISCSUBTITLE': 'discsubtitle',
+                'MusicBrainz Album Id': 'musicbrainzalbumid',
+                'MusicBrainz Artist Id': 'musicbrainzartistid',
+                'Acoustid Id': 'acoustidid',
+                'MusicBrainz Track Id': 'musicbrainzrecordingid',
+                'tsrc': 'isrc',
+            }
+
+            for src, dest in convdict.items():
+                if freeform['name'] == src:
+                    if tempdata.get(dest):
+                        tempdata[dest] = '/'.join([
+                            tempdata.get(dest),
+                            MP4FreeformDecoders[freeform.data_type](
+                                freeform.value)
+                        ])
+                    else:
+                        tempdata[dest] = MP4FreeformDecoders[
+                            freeform.data_type](freeform.value)
+
+            if freeform['name'] == 'website':
+                if tempdata.get('artistwebsite'):
+                    tempdata['artistwebsite'] = ' ; '.join([
+                        tempdata.get('artistwebsite'),
+                        MP4FreeformDecoders[freeform.data_type](freeform.value)
+                    ])
+                else:
+                    tempdata['artistwebsite'] = MP4FreeformDecoders[
+                        freeform.data_type](freeform.value)
+
+            return tempdata
+
         tempdata = {}
         for freeformlist in freeformparentlist:
             for freeform in freeformlist:
                 if freeform.description == 'com.apple.iTunes':
-                    if freeform['name'] == 'originaldate':
-                        tempdata['date'] = MP4FreeformDecoders[
-                            freeform.data_type](freeform.value)
-                    if freeform['name'] == 'LABEL':
-                        tempdata['label'] = MP4FreeformDecoders[
-                            freeform.data_type](freeform.value)
-                    if freeform['name'] == 'DISCSUBTITLE':
-                        tempdata['discsubtitle'] = MP4FreeformDecoders[
-                            freeform.data_type](freeform.value)
-                    if freeform['name'] == 'MusicBrainz Album Id':
-                        tempdata['musicbrainzalbumid'] = MP4FreeformDecoders[
-                            freeform.data_type](freeform.value)
-                    if freeform['name'] == 'MusicBrainz Artist Id':
-                        if tempdata.get('musicbrainzartistid'):
-                            tempdata['musicbrainzartistid'] = '/'.join([
-                                tempdata.get('musicbrainzartistid'),
-                                MP4FreeformDecoders[freeform.data_type](
-                                    freeform.value)
-                            ])
-                        else:
-                            tempdata[
-                                'musicbrainzartistid'] = MP4FreeformDecoders[
-                                    freeform.data_type](freeform.value)
+                    tempdata = _itunes(tempdata, freeform)
 
-                    if freeform['name'] == 'Acoustid Id':
-                        tempdata['acoustidid'] = MP4FreeformDecoders[
-                            freeform.data_type](freeform.value)
-                    if freeform['name'] == 'MusicBrainz Track Id':
-                        tempdata[
-                            'musicbrainzrecordingid'] = MP4FreeformDecoders[
-                                freeform.data_type](freeform.value)
         self._recognition_replacement(tempdata)
 
     def _process_audio_metadata_id3_usertext(self, usertextlist):
@@ -117,7 +125,37 @@ class MetadataProcessors:  # pylint: disable=too-few-public-methods
             elif usertext.description == 'originalyear':
                 self.metadata['date'] = usertext.text[0]
 
-    def _process_audio_metadata_specials(self, tags):
+    def _process_audio_metadata_othertags(self, tags):
+        if 'discnumber' in tags and 'disc' not in self.metadata:
+            text = tags['discnumber'][0].replace('[', '').replace(']', '')
+            try:
+                self.metadata['disc'], self.metadata[
+                    'disc_total'] = text.split('/')
+            except:  # pylint: disable=bare-except
+                pass
+
+        if 'tracknumber' in tags and 'track' not in self.metadata:
+            text = tags['tracknumber'][0].replace('[', '').replace(']', '')
+            try:
+                self.metadata['track'], self.metadata[
+                    'track_total'] = text.split('/')
+            except:  # pylint: disable=bare-except
+                pass
+
+        for websitetag in ['WOAR', 'website']:
+            if websitetag in tags and 'artistwebsite' not in self.metadata:
+                if isinstance(tags[websitetag], list):
+                    self.metadata['artistwebsite'] = ' ; '.join(
+                        str(x) for x in tags[websitetag])
+                else:
+                    self.metadata['artistwebsite'] = tags[websitetag]
+
+        if 'freeform' in tags:
+            self._process_audio_metadata_mp4_freeform(tags.freeform)
+        elif 'usertext' in tags:
+            self._process_audio_metadata_id3_usertext(tags.usertext)
+
+    def _process_audio_metadata_remaps(self, tags):
 
         convdict = {
             'acoustid id': 'acoustidid',
@@ -166,29 +204,8 @@ class MetadataProcessors:  # pylint: disable=too-few-public-methods
                 else:
                     self.metadata[key] = base.tags[key]
 
-        self._process_audio_metadata_specials(base.tags)
-
-        if 'discnumber' in base.tags and 'disc' not in self.metadata:
-            text = base.tags['discnumber'][0].replace('[', '').replace(']', '')
-            try:
-                self.metadata['disc'], self.metadata[
-                    'disc_total'] = text.split('/')
-            except:  # pylint: disable=bare-except
-                pass
-
-        if 'tracknumber' in base.tags and 'track' not in self.metadata:
-            text = base.tags['tracknumber'][0].replace('[',
-                                                       '').replace(']', '')
-            try:
-                self.metadata['track'], self.metadata[
-                    'track_total'] = text.split('/')
-            except:  # pylint: disable=bare-except
-                pass
-
-        if 'freeform' in base.tags:
-            self._process_audio_metadata_mp4_freeform(base.tags.freeform)
-        elif 'usertext' in base.tags:
-            self._process_audio_metadata_id3_usertext(base.tags.usertext)
+        self._process_audio_metadata_remaps(base.tags)
+        self._process_audio_metadata_othertags(base.tags)
 
         if 'bitrate' not in self.metadata and getattr(base, 'streaminfo'):
             self.metadata['bitrate'] = base.streaminfo['bitrate']
