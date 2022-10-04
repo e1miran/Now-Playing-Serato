@@ -75,6 +75,7 @@ Discogs
 -------
 
 Provides: Biographies, Fan art, and Thumbnails
+
 Media tags: album and artist
 
 `Discogs <https://www.discogs.com>`_ is a well-known source for music release information, a
@@ -87,6 +88,7 @@ fanart.tv
 -----------
 
 Provides: Banners, Fan art, Logos, and Thumbnails
+
 Media tags: MusicBrainz Artist ID
 
 `fanart.tv <https://www.fanart.tv>`_ is a community project to provide high quality
@@ -99,6 +101,7 @@ TheAudioDB
 -----------
 
 Provides: Banners, Biographies, Fan art, Logos, and Thumbnails
+
 Media tags: artist or MusicBrainz Artist ID
 
 `TheAudioDB <https://www.theaudiodb.com>`_ is a community project to provide high quality
