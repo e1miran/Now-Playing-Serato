@@ -190,6 +190,14 @@ class MusicBrainzHelper():
             newdata['musicbrainzartistid'])
         return newdata
 
+    def artistids(self, idlist):
+        ''' add data available via musicbrainz artist ids '''
+
+        if not self.config.cparser.value('acoustidmb/enabled', type=bool):
+            return None
+
+        return {'artistwebsites': self._websites(idlist)}
+
     def _websites(self, idlist):
         if not self.config.cparser.value('acoustidmb/websites',
                                          type=bool) or not idlist:
