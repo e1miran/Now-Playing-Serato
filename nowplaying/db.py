@@ -187,6 +187,34 @@ class MetadataDB:
             datatuple = tuple(list(mdcopy.values()))
             cursor.execute(sql, datatuple)
 
+    def make_lasttracklist(self):
+        ''' create a reversed of the tracks played '''
+
+        if not self.databasefile.exists():
+            logging.error('MetadataDB does not exist yet?')
+            return None
+
+        with sqlite3.connect(self.databasefile) as connection:
+            connection.row_factory = sqlite3.Row
+            cursor = connection.cursor()
+            try:
+                cursor.execute(
+                    '''SELECT artist, title FROM currentmeta ORDER BY id DESC'''
+                )
+            except sqlite3.OperationalError:
+                return None
+
+            records = cursor.fetchall()
+
+        lasttrack = []
+        if records:
+            lasttrack.extend({
+                'artist': row['artist'],
+                'title': row['title']
+            } for row in records)
+
+        return lasttrack
+
     def read_last_meta(self):
         ''' update metadb '''
 
@@ -207,18 +235,19 @@ class MetadataDB:
             if not row:
                 return None
 
-            metadata = {data: row[data] for data in MetadataDB.METADATALIST}
-            for key in MetadataDB.METADATABLOBLIST:
-                metadata[key] = row[key]
-                if not metadata[key]:
-                    del metadata[key]
+        metadata = {data: row[data] for data in MetadataDB.METADATALIST}
+        for key in MetadataDB.METADATABLOBLIST:
+            metadata[key] = row[key]
+            if not metadata[key]:
+                del metadata[key]
 
-            for key in MetadataDB.LISTFIELDS:
-                metadata[key] = row[key]
-                if metadata[key]:
-                    metadata[key] = metadata[key].split(SPLITSTR)
+        for key in MetadataDB.LISTFIELDS:
+            metadata[key] = row[key]
+            if metadata[key]:
+                metadata[key] = metadata[key].split(SPLITSTR)
 
-            metadata['dbid'] = row['id']
+        metadata['dbid'] = row['id']
+        metadata['lasttrack'] = self.make_lasttracklist()
         return metadata
 
     def setupsql(self):
