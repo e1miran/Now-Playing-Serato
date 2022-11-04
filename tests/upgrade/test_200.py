@@ -13,6 +13,7 @@ import pytest
 from PySide6.QtCore import QCoreApplication, QSettings  # pylint: disable=no-name-in-module
 
 import nowplaying.bootstrap  # pylint: disable=import-error
+import nowplaying.upgrade  # pylint: disable=import-error
 
 if sys.platform == 'darwin':
     import pwd
@@ -42,7 +43,7 @@ def move_old_config():
     reboot_macosx_prefs()
     if os.path.exists(othersettings.fileName()):
         logging.warning('Moving old em1ran config around')
-        os.rename(othersettings.fileName(), othersettings.fileName() + '.bak')
+        os.rename(othersettings.fileName(), f'{othersettings.fileName()}.bak')
         renamed = True
     reboot_macosx_prefs()
     yield
@@ -90,7 +91,7 @@ def test_version200_to_current():  # pylint: disable=redefined-outer-name
             with open(filename, encoding='utf-8') as configfh:
                 logging.debug(configfh.readlines())
         nowplaying.bootstrap.set_qt_names(appname='testsuite')
-        upgrade = nowplaying.bootstrap.UpgradeConfig(testdir=newpath)  #pylint: disable=unused-variable
+        upgrade = nowplaying.upgrade.UpgradeConfig(testdir=newpath)  #pylint: disable=unused-variable
         config = QSettings(qsettingsformat, QSettings.UserScope,
                            QCoreApplication.organizationName(),
                            QCoreApplication.applicationName())
