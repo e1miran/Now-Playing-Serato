@@ -4,8 +4,11 @@
 import logging
 import logging.config
 import logging.handlers
+import socket
 
 import requests
+import requests.exceptions
+import urllib3.exceptions
 
 import nowplaying.config
 from nowplaying.artistextras import ArtistExtrasPlugin
@@ -20,6 +23,22 @@ class Plugin(ArtistExtrasPlugin):
         self.client = None
         self.version = nowplaying.version.get_versions()['version']
         super().__init__(config=config, qsettings=qsettings)
+
+    @staticmethod
+    def _fetch(apikey, artistid):
+        artistrequest = None
+        try:
+            baseurl = f'http://webservice.fanart.tv/v3/music/{artistid}'
+            logging.debug('fanarttv: calling %s', baseurl)
+            artistrequest = requests.get(f'{baseurl}?api_key={apikey}',
+                                         timeout=5)
+        except (requests.exceptions.ReadTimeout,
+                urllib3.exceptions.ReadTimeoutError, socket.timeout):
+            logging.error('fantart.tv timeout getting artistid %s', artistid)
+        except Exception as error:  # pylint: disable=broad-except
+            logging.error('fanart.tv: %s', error)
+
+        return artistrequest
 
     def download(self, metadata=None, imagecache=None):  # pylint: disable=too-many-branches
         ''' download the extra data '''
@@ -44,14 +63,10 @@ class Plugin(ArtistExtrasPlugin):
         logging.debug('got musicbrainzartistid: %s',
                       metadata['musicbrainzartistid'])
         for artistid in metadata['musicbrainzartistid']:
-            try:
-                baseurl = f'http://webservice.fanart.tv/v3/music/{artistid}'
-                logging.debug('fanarttv: calling %s', baseurl)
-                artistrequest = requests.get(f'{baseurl}?api_key={apikey}',
-                                             timeout=5)
-            except Exception as error:  # pylint: disable=broad-except
-                logging.debug('fanart.tv: %s', error)
+            artistrequest = self._fetch(apikey, artistid)
+            if not artistrequest:
                 return None
+
             artist = artistrequest.json()
 
             if artist.get('name') and nowplaying.utils.normalize(
