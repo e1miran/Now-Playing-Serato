@@ -98,8 +98,7 @@ class MetadataProcessors:  # pylint: disable=too-few-public-methods
             return
 
         try:
-            tag = tinytag.TinyTag.get(
-                self.metadata['filename'], image=True)
+            tag = tinytag.TinyTag.get(self.metadata['filename'], image=True)
         except tinytag.tinytag.TinyTagException as error:
             logging.error('tinytag could not process %s: %s',
                           self.metadata['filename'], error)
@@ -196,8 +195,8 @@ class MetadataProcessors:  # pylint: disable=too-few-public-methods
                                   error,
                                   exc_info=True)
 
-        tasks = []
         if self.config.cparser.value('artistextras/enabled', type=bool):
+            tasks = []
             with concurrent.futures.ThreadPoolExecutor(
                     max_workers=3, thread_name_prefix='artistextras') as pool:
                 for plugin in self.config.plugins['artistextras']:

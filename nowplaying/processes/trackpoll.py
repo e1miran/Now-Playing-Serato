@@ -90,9 +90,13 @@ class TrackPoll():  # pylint: disable=too-many-instance-attributes
                 self.input = self.plugins[
                     f'nowplaying.inputs.{previousinput}'].Plugin()
                 logging.debug('Starting %s plugin', previousinput)
-                if self.input:
+                if not self.input:
+                    continue
+
+                try:
                     await self.input.start()
-                else:
+                except Exception as error:  # pylint: disable=broad-except
+                    logging.debug('cannot start %s: %s', previousinput, error)
                     continue
 
             try:
@@ -124,6 +128,18 @@ class TrackPoll():  # pylint: disable=too-many-instance-attributes
     def forced_stop(self, signum, frame):  # pylint: disable=unused-argument
         ''' caught an int signal so tell the world to stop '''
         self.stopevent.set()
+
+    def _verify_filename(self, metadata):
+        ''' verify filename actual exists and/or needs path substitution '''
+        if metadata.get('filename'):
+            filepath = pathlib.Path(metadata['filename'])
+            if not filepath.exists():
+                metadata['filename'] = nowplaying.utils.songpathsubst(
+                    self.config, metadata['filename'])
+                filepath = pathlib.Path()
+                if not filepath.exists():
+                    del metadata['filename']
+        return metadata
 
     def _check_title_for_path(self, title, filename):
         ''' if title actually contains a filename, move it to filename '''
@@ -187,6 +203,9 @@ class TrackPoll():  # pylint: disable=too-many-instance-attributes
                 metadata[fetched] = metadata[key]
             else:
                 metadata[fetched] = None
+
+        if metadata.get('filename'):
+            metadata = self._verify_filename(metadata)
 
         if metadata.get('title'):
             (metadata['title'],
