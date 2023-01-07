@@ -2,7 +2,6 @@
 ''' test m3u '''
 
 import hashlib
-import logging
 import os
 import random
 import string
@@ -10,7 +9,6 @@ import sys
 import tempfile
 
 import psutil
-import pytest
 
 from PySide6.QtCore import QCoreApplication, QSettings  # pylint: disable=no-name-in-module
 
@@ -29,30 +27,6 @@ def reboot_macosx_prefs():
                     os.getuid()).pw_name == process.username():
                 process.terminate()
                 process.wait()
-
-
-@pytest.fixture(autouse=True, scope="function")
-def move_old_config():
-    ''' make sure the old em1ran config is out of the way '''
-    if sys.platform == "win32":
-        qsettingsformat = QSettings.IniFormat
-    else:
-        qsettingsformat = QSettings.NativeFormat
-
-    othersettings = QSettings(qsettingsformat, QSettings.UserScope,
-                              'com.github.em1ran', 'NowPlaying')
-    renamed = False
-    reboot_macosx_prefs()
-    if os.path.exists(othersettings.fileName()):
-        logging.warning('Moving old em1ran config around')
-        os.rename(othersettings.fileName(), f'{othersettings.fileName()}.bak')
-        renamed = True
-    reboot_macosx_prefs()
-    yield
-    if renamed:
-        logging.warning('Moving old em1ran back')
-        os.rename(f'{othersettings.fileName()}.bak', othersettings.fileName())
-    reboot_macosx_prefs()
 
 
 def make_fake_300_config(fakestr):
