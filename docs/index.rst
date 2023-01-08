@@ -28,6 +28,7 @@ To get started, begin with `Quickstart <quickstart.html>`_.
    filter
    recognition/index
    extras/index
+   beam
    quirks
    templatevariables
    troubleshooting
