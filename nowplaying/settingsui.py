@@ -32,11 +32,10 @@ import nowplaying.utils
 class SettingsUI(QWidget):  # pylint: disable=too-many-public-methods, too-many-instance-attributes
     ''' create settings form window '''
 
-    def __init__(self, tray, version, beam):
+    def __init__(self, tray, beam):
 
         self.config = nowplaying.config.ConfigFile(beam=beam)
         self.tray = tray
-        self.version = version
         super().__init__()
         self.qtui = None
         self.errormessage = None
@@ -59,24 +58,7 @@ class SettingsUI(QWidget):  # pylint: disable=too-many-public-methods, too-many-
     def load_qtui(self):  # pylint: disable=too-many-branches, too-many-statements
         ''' load the base UI and wire it up '''
 
-        def _load_ui(name):
-            ''' load a UI file into a widget '''
-            loader = QUiLoader()
-            path = self.config.uidir.joinpath(f'{name}_ui.ui')
-            if not path.exists():
-                return None
-
-            ui_file = QFile(str(path))
-            ui_file.open(QFile.ReadOnly)
-            try:
-                qwidget = loader.load(ui_file)
-            except RuntimeError as error:
-                logging.warning('Unable to load the UI for %s: %s', name,
-                                error)
-            ui_file.close()
-            return qwidget
-
-        self.qtui = _load_ui('settings')
+        self.qtui = load_widget_ui(self.config, 'settings')
         self.uihelp = nowplaying.uihelp.UIHelp(self.config, self.qtui)
 
         if self.config.cparser.value('control/beam', type=bool):
@@ -104,7 +86,7 @@ class SettingsUI(QWidget):  # pylint: disable=too-many-public-methods, too-many-
                 pluginuinames.append(f'{plugintype}_{pkey}')
 
         for uiname in baseuis + pluginuinames + ['about']:
-            self.widgets[uiname] = _load_ui(f'{uiname}')
+            self.widgets[uiname] = load_widget_ui(self.config, f'{uiname}')
             if not self.widgets[uiname]:
                 continue
             try:
@@ -147,9 +129,8 @@ class SettingsUI(QWidget):  # pylint: disable=too-many-public-methods, too-many-
         self.qtui.reset_button.clicked.connect(self.on_reset_button)
         self.qtui.save_button.clicked.connect(self.on_save_button)
         self.errormessage = QErrorMessage(self.qtui)
-        curbutton = self.qtui.settings_list.findItems('general',
-                                                      Qt.MatchContains)
-        if curbutton:
+        if curbutton := self.qtui.settings_list.findItems(
+                'general', Qt.MatchContains):
             self.qtui.settings_list.setCurrentItem(curbutton[0])
 
     def _load_list_item(self, name, qobject):
@@ -222,10 +203,7 @@ class SettingsUI(QWidget):  # pylint: disable=too-many-public-methods, too-many-
     def upd_win(self):
         ''' update the settings window '''
         self.config.get()
-        self.widgets['about'].program_label.setText(
-            f'<html><head/><body><p><img src="{self.config.iconfile}"/>'
-            f'<span style=" font-size:14pt;"> Now Playing v{self.version}'
-            '</span></p></body></html>')
+        about_version_text(self.config, self.widgets['about'])
 
         self.widgets['general'].textoutput_lineedit.setText(self.config.file)
         self.widgets['general'].texttemplate_lineedit.setText(
@@ -802,3 +780,28 @@ class SettingsUI(QWidget):  # pylint: disable=too-many-public-methods, too-many-
     def exit(self):
         ''' exit the tray '''
         self.qtui.close()
+
+
+def about_version_text(config, qwidget):
+    ''' set the version text for about box '''
+    qwidget.program_label.setText(
+        f'<html><head/><body><p><img src="{config.iconfile}"/>'
+        f'<span style=" font-size:14pt;"> What\'s Now Playing v{config.version}'
+        '</span></p></body></html>')
+
+
+def load_widget_ui(config, name):
+    ''' load a UI file into a widget '''
+    loader = QUiLoader()
+    path = config.uidir.joinpath(f'{name}_ui.ui')
+    if not path.exists():
+        return None
+
+    ui_file = QFile(str(path))
+    ui_file.open(QFile.ReadOnly)
+    try:
+        qwidget = loader.load(ui_file)
+    except RuntimeError as error:
+        logging.warning('Unable to load the UI for %s: %s', name, error)
+    ui_file.close()
+    return qwidget
