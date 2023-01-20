@@ -17,6 +17,7 @@ import nowplaying.imagecache
 import nowplaying.inputs
 import nowplaying.metadata
 import nowplaying.trackrequests
+import nowplaying.textoutput
 import nowplaying.utils
 
 COREMETA = ['artist', 'filename', 'title']
@@ -58,10 +59,12 @@ class TrackPoll():  # pylint: disable=too-many-instance-attributes
                 config=self.config, stopevent=self.stopevent)
 
         self.tasks = set()
+        nowplaying.textoutput.deltxttrack(self.config)
         self.metadataprocessors = nowplaying.metadata.MetadataProcessors(
             config=self.config)
         self.create_tasks()
-        self.loop.run_forever()
+        if not testmode:
+            self.loop.run_forever()
 
     def _resetcurrent(self):
         ''' reset the currentmeta to blank '''
@@ -147,7 +150,8 @@ class TrackPoll():  # pylint: disable=too-many-instance-attributes
             await self.input.stop()
         self.plugins = None
         loop = asyncio.get_running_loop()
-        loop.stop()
+        if not self.testmode:
+            loop.stop()
 
     def forced_stop(self, signum, frame):  # pylint: disable=unused-argument
         ''' caught an int signal so tell the world to stop '''
@@ -325,15 +329,18 @@ class TrackPoll():  # pylint: disable=too-many-instance-attributes
                 'coverimageraw']
 
     def _write_to_text(self):
-        if self.config.file:
-            if not self.previoustxttemplate or self.previoustxttemplate != self.config.txttemplate:
-                self.txttemplatehandler = nowplaying.utils.TemplateHandler(
-                    filename=self.config.txttemplate)
-                self.previoustxttemplate = self.config.txttemplate
-            nowplaying.utils.writetxttrack(
-                filename=self.config.file,
-                templatehandler=self.txttemplatehandler,
-                metadata=self.currentmeta)
+        if configfile := self.config.cparser.value('textoutput/file'):
+            if configtemplate := self.config.cparser.value(
+                    'textoutput/txttemplate'):
+                if not self.previoustxttemplate or self.previoustxttemplate != configtemplate:
+                    self.txttemplatehandler = nowplaying.utils.TemplateHandler(
+                        filename=configtemplate)
+                    self.previoustxttemplate = configtemplate
+                nowplaying.textoutput.writetxttrack(
+                    config=self.config,
+                    filename=configfile,
+                    templatehandler=self.txttemplatehandler,
+                    metadata=self.currentmeta)
 
     async def _half_delay_write(self):
         try:

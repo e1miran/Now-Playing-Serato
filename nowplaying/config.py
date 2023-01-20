@@ -70,7 +70,6 @@ class ConfigFile:  # pylint: disable=too-many-instance-attributes, too-many-publ
                                  QCoreApplication.applicationName())
         logging.info('configuration: %s', self.cparser.fileName())
         self.notif = False
-        self.file = None
         self.txttemplate = str(self.templatedir.joinpath("basic-plain.txt"))
         self.loglevel = 'DEBUG'
 
@@ -122,7 +121,6 @@ class ConfigFile:  # pylint: disable=too-many-instance-attributes, too-many-publ
         except TypeError:
             pass
 
-        self.file = self.cparser.value('textoutput/file', defaultValue=None)
         self.txttemplate = self.cparser.value('textoutput/txttemplate',
                                               defaultValue=None)
 
@@ -167,8 +165,10 @@ class ConfigFile:  # pylint: disable=too-many-instance-attributes, too-many-publ
         settings.setValue('settings/notif', self.notif)
         settings.setValue('settings/stripextras', False)
 
-        settings.setValue('textoutput/file', self.file)
+        settings.setValue('textoutput/file', None)
         settings.setValue('textoutput/txttemplate', self.txttemplate)
+        settings.setValue('textoutput/clearonstartup', True)
+        settings.setValue('textoutput/fileappend', False)
 
         settings.setValue('obsws/enabled', False)
         settings.setValue('obsws/host', 'localhost')
@@ -273,14 +273,12 @@ class ConfigFile:  # pylint: disable=too-many-instance-attributes, too-many-publ
             f'nowplaying.{plugintype}.{plugin}'].desc_settingsui(qtwidget)
 
     # pylint: disable=too-many-arguments
-    def put(self, initialized, file, txttemplate, notif, loglevel):
+    def put(self, initialized, notif, loglevel):
         ''' Save the configuration file '''
 
-        self.file = file
         self.initialized = initialized
         self.loglevel = loglevel
         self.notif = notif
-        self.txttemplate = txttemplate
 
         self.save()
 
@@ -292,8 +290,6 @@ class ConfigFile:  # pylint: disable=too-many-instance-attributes, too-many-publ
                               time.strftime("%Y%m%d%H%M%S"))
         self.cparser.setValue('settings/loglevel', self.loglevel)
         self.cparser.setValue('settings/notif', self.notif)
-        self.cparser.setValue('textoutput/file', self.file)
-        self.cparser.setValue('textoutput/txttemplate', self.txttemplate)
 
         self.cparser.sync()
 
