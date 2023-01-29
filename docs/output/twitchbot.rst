@@ -81,13 +81,14 @@ to create a new account and these instructions are following those guidelines.
    :target: images/twitchbot_auth.png
    :alt: What's Now Playing's Twitch auth panel
 
-
 You will need to provide all four to the Twitchbot Settings.  Additionally,
 you should consider making the bot a moderator on your channel to avoid limits,
 such as the message posting rate, URL filters, etc.
 
 For certain services, such as channel point redemptions, launching **What's Now Playing**
-will also launch a browser in order to authenticate the bot to your channel.
+will also launch a browser in order to authenticate the bot to **your** channel.  So when it
+asks for permission, make sure it is **your** channel and not the bot's channel and to accept
+the things that it wants to access.
 
 Twitch Chat Configuration
 -------------------------
