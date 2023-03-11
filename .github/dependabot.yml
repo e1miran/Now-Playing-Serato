@@ -10,8 +10,6 @@ updates:
     directory: "/"  # Location of package manifests
     schedule:
       interval: "weekly"
-    assignee:
-      - "aw-was-here"
     reviewers:
       - "aw-was-here"
 
@@ -19,8 +17,6 @@ updates:
     directory: "/docs"  # Location of package manifests
     schedule:
       interval: "weekly"
-    assignee:
-      - "aw-was-here"
     reviewers:
       - "aw-was-here"
 
@@ -30,7 +26,5 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-    assignee:
-      - "aw-was-here"
     reviewers:
       - "aw-was-here"
