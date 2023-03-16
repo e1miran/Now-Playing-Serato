@@ -5,6 +5,7 @@ import asyncio
 import json
 import logging
 import pathlib
+import random
 
 from nowplaying.inputs import InputPlugin
 
@@ -15,6 +16,7 @@ class Plugin(InputPlugin):
     def __init__(self, config=None, qsettings=None):
         ''' no custom init '''
         super().__init__(config=config, qsettings=qsettings)
+        self.playlists = None
 
     def install(self):
         ''' auto-install '''
@@ -72,7 +74,7 @@ class Plugin(InputPlugin):
             return {}
 
         try:
-            with open(filepath, mode='r', encoding='utf-8') as fhin:
+            with open(filepath, mode='rb') as fhin:
                 return json.load(fhin)
         except Exception as error:  # pylint: disable=broad-except
             logging.error(error)
@@ -80,8 +82,25 @@ class Plugin(InputPlugin):
         return {}
 
     async def getrandomtrack(self, playlist):
-        ''' not supported '''
-        return None
+        ''' return a random track '''
+        if not self.playlists or not self.playlists.get(playlist):
+            return None
+
+        return random.choice(self.playlists[playlist])
+
+    def load_playlists(self, dirpath, playlistfile):
+        ''' load a playlist file '''
+        with open(playlistfile, mode='rb') as fhin:
+            datain = json.load(fhin)
+
+        self.playlists = {}
+        for listname, filelist in datain.items():
+            self.playlists[listname] = [
+                value.replace(
+                    'ROOTPATH',
+                    str(dirpath),
+                ) for value in filelist
+            ]
 
 
 #### Control methods
