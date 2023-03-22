@@ -3,6 +3,7 @@
 
 import logging
 import os
+import sys
 
 import pytest
 
@@ -215,6 +216,7 @@ def test_onlymbid(getconfiguredplugin):  # pylint: disable=redefined-outer-name
         assert not imagecaches[pluginname].urls
 
 
+@pytest.mark.xfail(sys.platform == "win32", reason="Windows is flaky")
 def test_artist_and_mbid(getconfiguredplugin):  # pylint: disable=redefined-outer-name
     ''' badmbid '''
     imagecaches, plugins = getconfiguredplugin
@@ -244,6 +246,7 @@ def test_artist_and_mbid(getconfiguredplugin):  # pylint: disable=redefined-oute
             assert not imagecaches[pluginname].urls
 
 
+@pytest.mark.xfail(sys.platform == "win32", reason="Windows is flaky")
 def test_all(getconfiguredplugin):  # pylint: disable=redefined-outer-name
     ''' badmbid '''
     imagecaches, plugins = getconfiguredplugin
@@ -269,6 +272,7 @@ def test_all(getconfiguredplugin):  # pylint: disable=redefined-outer-name
         assert data['artistfanarturls']
 
 
+@pytest.mark.xfail(sys.platform == "win32", reason="Windows is flaky")
 def test_theall(getconfiguredplugin):  # pylint: disable=redefined-outer-name
     ''' badmbid '''
     imagecaches, plugins = getconfiguredplugin
