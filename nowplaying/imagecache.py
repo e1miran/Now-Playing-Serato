@@ -411,7 +411,7 @@ VALUES (?,?,?);
             }
             dlimage = session.get(imagedict['url'], timeout=5, headers=headers)
         except Exception as error:  # pylint: disable=broad-except
-            logging.debug('image_dl: %s %s', imagedict['url'], error)
+            logging.error('image_dl: %s %s', imagedict['url'], error)
             self.erase_url(imagedict['url'])
             return
         if dlimage.status_code == 200:
@@ -422,7 +422,7 @@ VALUES (?,?,?);
                                  imagetype=imagedict['imagetype'],
                                  cachekey=cachekey)
         else:
-            logging.debug('image_dl: status_code %s', dlimage.status_code)
+            logging.error('image_dl: status_code %s', dlimage.status_code)
             self.erase_url(imagedict['url'])
             return
 
@@ -444,7 +444,7 @@ VALUES (?,?,?);
         if not self.databasefile.exists():
             return
 
-        cachekeys = []
+        cachekeys = {}
 
         try:
             logging.debug('Starting image cache verification')
@@ -457,21 +457,27 @@ VALUES (?,?,?);
                         url = row['url']
                         if url == 'STOPWNP':
                             continue
-                        cachekeys.append(row['cachekey'])
+                        cachekeys[row['cachekey']] = url
         except:  # pylint: disable=bare-except
             for line in traceback.format_exc().splitlines():
-                logging.debug(line)
+                logging.error(line)
 
+        startsize = len(cachekeys)
+        if not startsize:
+            logging.debug('Finished image cache verification: no cache!')
+            return
 
+        count = startsize
         # making this two separate operations unlocks the DB
-        for key in cachekeys:
+        for key, url in cachekeys.items():
             try:
                 image = self.cache[key]  # pylint: disable=unused-variable
             except KeyError:
+                count -= 1
                 logging.debug('%s/%s expired', key, url)
-                self.erase_cachekey(key)
-        logging.debug('Finished image cache verification: %s images',
-                      len(cachekeys))
+                self.erase_url(url)
+        logging.debug('Finished image cache verification: %s/%s images', count,
+                      startsize)
 
     def queue_process(self, logpath, maxworkers=5):
         ''' Process to download stuff in the background to avoid the GIL '''
