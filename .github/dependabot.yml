@@ -13,13 +13,6 @@ updates:
     reviewers:
       - "aw-was-here"
 
-  - package-ecosystem: "pip"
-    directory: "/docs"  # Location of package manifests
-    schedule:
-      interval: "weekly"
-    reviewers:
-      - "aw-was-here"
-
   - package-ecosystem: "github-actions"
     # Workflow files stored in the
     # default location of `.github/workflows`
