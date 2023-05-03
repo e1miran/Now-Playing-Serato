@@ -11,6 +11,7 @@ on:  # yamllint disable-line rule:truthy
 
 permissions:
   deployments: write
+  contents: write
 
 jobs:
 
