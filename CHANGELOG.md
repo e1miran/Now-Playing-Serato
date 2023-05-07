@@ -1,7 +1,7 @@
 
 # Changelog
 
-## Version 4.0.4 - 2023-04-07
+## Version 4.0.4 - 2023-05-07
 
 * Experimental feature: Given an option to use Musicbrainz to fill in missing
   metadata based only on artist and title (and album if available).
