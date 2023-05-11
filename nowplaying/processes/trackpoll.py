@@ -272,8 +272,10 @@ class TrackPoll():  # pylint: disable=too-many-instance-attributes
         try:
             metadata = await self.metadataprocessors.getmoremetadata(
                 metadata=metadata, imagecache=self.imagecache)
-        except OSError as error:  # pragma: no cover
-            logging.error('MetadataProcessor failed: %s', error)
+        except Exception:  # pylint: disable=broad-except
+            for line in traceback.format_exc().splitlines():
+                logging.error(line)
+            logging.error('Ignoring metadataprocessor failure.')
         for key in COREMETA:
             if key not in metadata:
                 logging.info('Track missing %s data, setting it to blank.',
@@ -311,7 +313,8 @@ class TrackPoll():  # pylint: disable=too-many-instance-attributes
             for line in traceback.format_exc().splitlines():
                 logging.error(line)
             await asyncio.sleep(5)
-            return
+            logging.error('Ignoring the crash and just keep going!')
+            self.currentmeta = nextmeta
 
         logging.info('Potential new track: %s / %s',
                      self.currentmeta['artist'], self.currentmeta['title'])
