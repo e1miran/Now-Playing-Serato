@@ -2,8 +2,9 @@
 ''' Input Plugin definition '''
 
 import sys
+import typing as t
 
-from nowplaying.exceptions import PluginVerifyError
+#from nowplaying.exceptions import PluginVerifyError
 from nowplaying.plugin import WNPBasePlugin
 
 
@@ -11,16 +12,16 @@ class RecognitionPlugin(WNPBasePlugin):
     ''' base class of recognition plugins '''
 
     def __init__(self, config=None, qsettings=None):
-        self.plugintype = 'recognition'
         super().__init__(config=config, qsettings=qsettings)
+        self.plugintype = 'recognition'
 
 #### Recognition methods
 
-    def recognize(self, metadata=None):  #pylint: disable=no-self-use
+    def recognize(self, metadata=None) -> t.Optional[dict]:  #pylint: disable=no-self-use
         ''' return metadata '''
         raise NotImplementedError
 
-    def providerinfo(self):
+    def providerinfo(self) -> dict:
         ''' return list of what is provided by this recognition system '''
         raise NotImplementedError
 
