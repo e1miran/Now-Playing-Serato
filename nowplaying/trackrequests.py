@@ -18,7 +18,6 @@ from PySide6.QtUiTools import QUiLoader  # pylint: disable=import-error, no-name
 
 import nowplaying.db
 import nowplaying.metadata
-from nowplaying import __version__ as VERSION
 from nowplaying.exceptions import PluginVerifyError
 from nowplaying.utils import TRANSPARENT_PNG_BIN
 
@@ -561,7 +560,7 @@ class Requests:  #pylint: disable=too-many-instance-attributes, too-many-public-
 
         result = None
         streamer = self.config.cparser.value('twitch/channel')
-        client_key = f'whatsnowplaying/{VERSION}/{streamer}'
+        client_key = f'whatsnowplaying/{self.config.version}/{streamer}'
 
         params = {
             'media_filter': 'gif',
