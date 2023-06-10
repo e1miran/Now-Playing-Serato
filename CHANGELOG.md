@@ -1,7 +1,7 @@
 
 # Changelog
 
-## Version 4.0.5 - Unreleased
+## Version 4.0.5 - 2023-06-09
 
 * Musicbrainz fill-in feature should be less crash-prone
 * Ability to force Twitch chat bot to post rather than reply
