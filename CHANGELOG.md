@@ -1,6 +1,11 @@
 
 # Changelog
 
+## Version 4.0.6 - 2023-06-15
+
+* Setlists were not getting created.
+* Fresh installs would not actually install.
+
 ## Version 4.0.5 - 2023-06-09
 
 * Musicbrainz fill-in feature should be less crash-prone
