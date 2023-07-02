@@ -10,9 +10,9 @@ import requests
 import requests.exceptions
 import urllib3.exceptions
 
-import nowplaying.config
+#import nowplaying.config
 from nowplaying.artistextras import ArtistExtrasPlugin
-import nowplaying.utils
+#import nowplaying.utils
 
 
 class Plugin(ArtistExtrasPlugin):
@@ -60,7 +60,7 @@ class Plugin(ArtistExtrasPlugin):
         if not metadata.get('musicbrainzartistid'):
             return None
 
-        fnstr = nowplaying.utils.normalize(metadata['artist'])
+        #fnstr = nowplaying.utils.normalize(metadata['artist'])
         logging.debug('got musicbrainzartistid: %s', metadata['musicbrainzartistid'])
         for artistid in metadata['musicbrainzartistid']:
             artistrequest = self._fetch(apikey, artistid)
@@ -69,11 +69,11 @@ class Plugin(ArtistExtrasPlugin):
 
             artist = artistrequest.json()
 
-            if artist.get('name') and nowplaying.utils.normalize(artist['name']) in fnstr:
-                logging.debug("fanarttv Trusting : %s", artist['name'])
-            else:
-                logging.debug("fanarttv Not trusting: %s vs %s", artist.get('name'), fnstr)
-                continue
+            # if artist.get('name') and nowplaying.utils.normalize(artist['name']) in fnstr:
+            #     logging.debug("fanarttv Trusting : %s", artist['name'])
+            # else:
+            #     logging.debug("fanarttv Not trusting: %s vs %s", artist.get('name'), fnstr)
+            #     continue
 
             if artist.get('musicbanner') and self.config.cparser.value('fanarttv/banners',
                                                                        type=bool):
