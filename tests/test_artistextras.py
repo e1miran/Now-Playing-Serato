@@ -191,6 +191,51 @@ def test_missingmbid(getconfiguredplugin):  # pylint: disable=redefined-outer-na
             assert not imagecaches[pluginname].urls
 
 
+def test_featuring1(getconfiguredplugin):  # pylint: disable=redefined-outer-name
+    ''' artist '''
+    imagecaches, plugins = getconfiguredplugin
+    for pluginname in PLUGINS:
+        logging.debug('Testing %s', pluginname)
+
+        data = plugins[pluginname].download(
+            {
+                'artist': 'Grimes feat Janelle Monáe',
+                'title': 'Venus Fly',
+                'album': 'Art Angel'
+            },
+            imagecache=imagecaches[pluginname])
+        if pluginname == 'discogs':
+            assert data['artistfanarturls']
+            assert data['artistlongbio']
+            assert data['artistwebsites']
+        elif pluginname == 'theaudiodb':
+            assert data['artistfanarturls']
+            assert data['artistlongbio']
+            assert data['artistwebsites']
+            assert imagecaches[pluginname].urls['Grimes feat Janelle Monáe']['artistbanner']
+            assert imagecaches[pluginname].urls['Grimes feat Janelle Monáe']['artistlogo']
+            assert imagecaches[pluginname].urls['Grimes feat Janelle Monáe']['artistthumb']
+
+
+def test_featuring2(getconfiguredplugin):  # pylint: disable=redefined-outer-name
+    ''' artist '''
+    imagecaches, plugins = getconfiguredplugin
+    for pluginname in PLUGINS:
+        logging.debug('Testing %s', pluginname)
+
+        data = plugins[pluginname].download(
+            {
+                'artist': 'MӨЯIS BLΛK feat. grabyourface',
+                'title': 'Complicate',
+                'album': 'Irregular Revisions'
+            },
+            imagecache=imagecaches[pluginname])
+        if pluginname == 'discogs':
+            assert data['artistfanarturls']
+            assert data['artistlongbio']
+            assert data['artistwebsites']
+
+
 def test_badmbid(getconfiguredplugin):  # pylint: disable=redefined-outer-name
     ''' badmbid '''
     imagecaches, plugins = getconfiguredplugin

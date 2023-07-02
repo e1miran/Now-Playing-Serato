@@ -30,6 +30,16 @@ TRANSPARENT_PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC'\
 
 TRANSPARENT_PNG_BIN = base64.b64decode(TRANSPARENT_PNG)
 
+ARTIST_VARIATIONS_RE = [
+    re.compile('(?i)^the (.*)'),
+    re.compile(r'(?i)^(.*?)( feat.* .*)$'),
+]
+
+MISSED_TRANSLITERAL = "ΛΔӨЯ†"
+REPLACED_CHARACTERS = "AAORT"
+CUSTOM_TRANSLATE = str.maketrans(MISSED_TRANSLITERAL + MISSED_TRANSLITERAL.lower(),
+                                 REPLACED_CHARACTERS + REPLACED_CHARACTERS.lower())
+
 
 class HTMLFilter(HTMLParser):
     ''' simple class to strip HTML '''
@@ -195,7 +205,8 @@ def normalize(crazystring):
         return None
     if len(crazystring) < 4:
         return 'TEXT IS TOO SMALL IGNORE'
-    if text := normality.normalize(crazystring):
+    text = crazystring.translate(CUSTOM_TRANSLATE)
+    if text := normality.normalize(text):
         return text.replace(' ', '')
     return None
 
@@ -233,3 +244,21 @@ def humanize_time(seconds):
     if seconds > 60:
         return time.strftime('%M:%S', time.gmtime(convseconds))
     return time.strftime('%S', time.gmtime(convseconds))
+
+
+def artist_name_variations(artistname: str) -> list[str]:
+    ''' turn an artistname into various computed variations '''
+    lowername = artistname.lower()
+    names = [lowername, lowername.translate(CUSTOM_TRANSLATE)]
+    if normalized := normality.normalize(lowername):
+        names.append(normalized)
+        names.append(normalized.translate(CUSTOM_TRANSLATE))
+    for recheck in ARTIST_VARIATIONS_RE:
+        if matched := recheck.match(lowername):
+            matchstr = matched.group(1)
+            names.append(matchstr)
+            names.append(matchstr.translate(CUSTOM_TRANSLATE))
+            if normalized := normality.normalize(matchstr):
+                names.append(normalized)
+                names.append(normalized.translate(CUSTOM_TRANSLATE))
+    return list(dict.fromkeys(names))

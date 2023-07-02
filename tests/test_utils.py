@@ -182,3 +182,72 @@ def test_image2avif(getroot):
     avifdata2 = nowplaying.utils.image2avif(avifdata)
     assert avifdata.startswith(b'\x00\x00\x00 ftypavif')
     assert avifdata2 == avifdata
+
+
+def test_artist_variations1():
+    ''' verify artist variation '''
+    namelist = nowplaying.utils.artist_name_variations("The Call")
+    assert namelist[0] == "the call"
+    assert namelist[1] == "call"
+    assert len(namelist) == 2
+
+
+def test_artist_variations2():
+    ''' verify artist variation '''
+    namelist = nowplaying.utils.artist_name_variations("Prince")
+    assert namelist[0] == "prince"
+    assert len(namelist) == 1
+
+
+def test_artist_variations3():
+    ''' verify artist variation '''
+    namelist = nowplaying.utils.artist_name_variations("Presidents of the United States of America")
+    assert namelist[0] == "presidents of the united states of america"
+    assert len(namelist) == 1
+
+
+def test_artist_variations4():
+    ''' verify artist variation '''
+    namelist = nowplaying.utils.artist_name_variations("Grimes feat Janelle Monáe")
+    assert namelist[0] == "grimes feat janelle monáe"
+    assert namelist[1] == "grimes feat janelle monae"
+    assert namelist[2] == "grimes"
+    assert len(namelist) == 3
+
+
+def test_artist_variations5():
+    ''' verify artist variation '''
+    namelist = nowplaying.utils.artist_name_variations("G feat J and featuring U")
+    assert namelist[0] == "g feat j and featuring u"
+    assert namelist[1] == "g"
+    assert len(namelist) == 2
+
+
+def test_artist_variations6():
+    ''' verify artist variation '''
+    namelist = nowplaying.utils.artist_name_variations("MӨЯIS BLΛK feat. grabyourface")
+    assert namelist[0] == "mөяis blλk feat. grabyourface"
+    assert namelist[1] == "moris blak feat. grabyourface"
+    assert namelist[2] == "mөяis blλk feat grabyourface"
+    assert namelist[3] == "moris blak feat grabyourface"
+    assert namelist[4] == "mөяis blλk"
+    assert namelist[5] == "moris blak"
+    assert len(namelist) == 6
+
+
+def test_artist_variations7():
+    ''' verify artist variation '''
+    namelist = nowplaying.utils.artist_name_variations("†HR33ΔM")
+    assert namelist[0] == "†hr33δm"
+    assert namelist[1] == "thr33am"
+    assert namelist[2] == "hr33δm"
+    assert namelist[3] == "hr33am"
+    assert len(namelist) == 4
+
+
+def test_artist_variations8():
+    ''' verify artist variation '''
+    namelist = nowplaying.utils.artist_name_variations("Ultra Naté")
+    assert namelist[0] == "ultra naté"
+    assert namelist[1] == "ultra nate"
+    assert len(namelist) == 2
