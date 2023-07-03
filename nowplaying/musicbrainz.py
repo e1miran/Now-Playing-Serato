@@ -76,7 +76,6 @@ class MusicBrainzHelper():
                             continue
                 logging.debug('checking %s', recording['id'])
                 if riddata := self.recordingid(recording['id']):
-                    logging.debug('selected %s', recording['id'])
                     return riddata
 
         return riddata
@@ -114,6 +113,8 @@ class MusicBrainzHelper():
             riddata = self._pickarecording(addmeta, mydict)
         if not riddata:
             riddata = self._pickarecording(addmeta, mydict, allowothers=True)
+        logging.debug('metadata added artistid = %s / recordingid = %s',
+                      riddata.get('musicbrainzartistid'), riddata.get('musicbrainzrecordingid'))
         return riddata
 
     def recognize(self, metadata):
@@ -295,7 +296,8 @@ class MusicBrainzHelper():
         return {'artistwebsites': self._websites(idlist)}
 
     def _websites(self, idlist):
-        if not self.config.cparser.value('acoustidmb/websites', type=bool) or not idlist:
+
+        if not idlist:
             return None
 
         sitelist = []
@@ -321,8 +323,12 @@ class MusicBrainzHelper():
             for urlrel in webdata['artist']['url-relation-list']:
                 logging.debug('checking %s', urlrel['type'])
                 for src, dest in convdict.items():
-                    if urlrel['type'] == src and self.config.cparser.value(f'acoustidmb/{dest}',
-                                                                           type=bool):
+                    if self.config.cparser.value('discogs/enabled',
+                                                 type=bool) and urlrel['type'] == 'discogs':
+                        sitelist.append(urlrel['target'])
+                        logging.debug('placed %s', dest)
+                    elif urlrel['type'] == src and self.config.cparser.value(f'acoustidmb/{dest}',
+                                                                             type=bool):
                         sitelist.append(urlrel['target'])
                         logging.debug('placed %s', dest)
 
