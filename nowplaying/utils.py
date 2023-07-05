@@ -11,6 +11,7 @@ import os
 import re
 import time
 import traceback
+import typing as t
 
 import jinja2
 import normality
@@ -108,7 +109,7 @@ class TemplateHandler():  # pylint: disable=too-few-public-methods
                 rendertext = self.template.render(**metadatadict)
             else:
                 rendertext = self.template.render()
-        except:  #pylint: disable=bare-except
+        except Exception:  # pylint: disable=broad-except
             for line in traceback.format_exc().splitlines():
                 logging.error(line)
         return rendertext
@@ -184,9 +185,7 @@ def songpathsubst(config, filename):
         newname = filename
 
     if songin := config.cparser.value('quirks/filesubstin'):
-        songout = config.cparser.value('quirks/filesubstout')
-        if not songout:
-            songout = ''
+        songout = config.cparser.value('quirks/filesubstout') or ''
 
         try:
             newname = filename.replace(songin, songout)
@@ -199,16 +198,26 @@ def songpathsubst(config, filename):
     return newname
 
 
-def normalize(crazystring):
-    ''' take a string and genericize it '''
-    if not crazystring:
+def normalize_text(text: t.Optional[str]) -> t.Optional[str]:
+    ''' take a string and genercize it '''
+    if not text:
         return None
-    if len(crazystring) < 4:
+    transtext = text.translate(CUSTOM_TRANSLATE)
+    if normal := normality.normalize(transtext):
+        return normal
+    return transtext
+
+
+def normalize(text: t.Optional[str], sizecheck: int = 0, nospaces: bool = False) -> t.Optional[str]:
+    ''' genericize string, optionally strip spaces, do a size check '''
+    if not text:
+        return None
+    if len(text) < sizecheck:
         return 'TEXT IS TOO SMALL IGNORE'
-    text = crazystring.translate(CUSTOM_TRANSLATE)
-    if text := normality.normalize(text):
-        return text.replace(' ', '')
-    return None
+    normaltext = normalize_text(text) or text
+    if nospaces:
+        return normaltext.replace(' ', '')
+    return normaltext
 
 
 def titlestripper_basic(title=None, title_regex_list=None):
