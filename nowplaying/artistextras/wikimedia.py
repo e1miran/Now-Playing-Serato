@@ -6,25 +6,45 @@ from nowplaying.vendor import wptools
 
 from nowplaying.artistextras import ArtistExtrasPlugin
 
+
 class Plugin(ArtistExtrasPlugin):
     ''' handler for discogs '''
 
     def __init__(self, config=None, qsettings=None):
         super().__init__(config=config, qsettings=qsettings)
         self.displayname = "Wikimedia"
+        self.priority = 1000
+
+    def _check_missing(self, metadata):
+        ''' check for missing required data '''
+        if not self.config or not self.config.cparser.value('wikimedia/enabled', type=bool):
+            logging.debug('not configured')
+            return True
+
+        if not metadata:
+            logging.debug('no metadata?')
+            return True
+
+        if not metadata.get('artistwebsites'):
+            logging.debug('No artistwebsites.')
+            return True
+        return False
 
     def download(self, metadata=None, imagecache=None):
         ''' download content '''
 
-        mymeta = {}
-        print(metadata['artistwebsites'])
-        if not metadata.get('artistwebsites'):
-            logging.debug('No artistwebsites.')
-            return None
+        if self._check_missing(metadata):
+            return {}
 
+        mymeta = {}
         wikidata_websites = [url for url in metadata['artistwebsites'] if 'wikidata' in url]
+        if not wikidata_websites:
+            logging.debug('no wikidata entity')
+            return {}
+
         for website in wikidata_websites:
             entity = website.split('/')[-1]
+            logging.debug("Processing %s", entity)
             page = wptools.page(wikibase=entity, silent=True)
             page.get()
 
@@ -47,7 +67,8 @@ class Plugin(ArtistExtrasPlugin):
                     elif image['kind'] == 'query-thumbnail':
                         thumbs.append(image['url'])
 
-            if thumbs and self.config.cparser.value('wikimedia/thumbnails', type=bool):
+            if imagecache and thumbs and self.config.cparser.value('wikimedia/thumbnails',
+                                                                   type=bool):
                 imagecache.fill_queue(config=self.config,
                                       artist=metadata['artist'],
                                       imagetype='artistthumb',
