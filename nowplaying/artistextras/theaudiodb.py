@@ -24,7 +24,7 @@ class Plugin(ArtistExtrasPlugin):
         super().__init__(config=config, qsettings=qsettings)
         self.fnstr = None
         self.displayname = "TheAudioDB"
-        self.priority = 60
+        self.priority = 50
 
     @staticmethod
     def _filter(text):
