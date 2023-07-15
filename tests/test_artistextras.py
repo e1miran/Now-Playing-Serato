@@ -360,7 +360,6 @@ def test_theall(getconfiguredplugin):  # pylint: disable=redefined-outer-name
         if pluginname == 'wikimedia':
             metadata['artistwebsites'] = ['https://www.wikidata.org/wiki/Q11647']
         data = plugins[pluginname].download(metadata, imagecache=imagecaches[pluginname])
-        logging.debug(imagecaches['theaudiodb'].urls)
         if pluginname in ['discogs', 'theaudiodb']:
             assert data['artistlongbio']
             assert data['artistwebsites']
@@ -389,7 +388,7 @@ def test_notfound(getconfiguredplugin):  # pylint: disable=redefined-outer-name
 
 
 def test_wikimedia_langfallback1(bootstrap):  # pylint: disable=redefined-outer-name
-    ''' noimagecache '''
+    ''' not english test '''
 
     config = bootstrap
     configuresettings('wikimedia', config.cparser)
@@ -403,7 +402,7 @@ def test_wikimedia_langfallback1(bootstrap):  # pylint: disable=redefined-outer-
 
 
 def test_wikimedia_langfallback2(bootstrap):  # pylint: disable=redefined-outer-name
-    ''' noimagecache '''
+    ''' not english test '''
 
     config = bootstrap
     configuresettings('wikimedia', config.cparser)
