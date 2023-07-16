@@ -69,7 +69,6 @@ class Plugin(ArtistExtrasPlugin):
 
         bio = ''
 
-        oldartist = metadata['artist']
         for artdata in extradata:  # pylint: disable=too-many-nested-blocks
 
             if not self._check_artist(artdata):
@@ -95,7 +94,7 @@ class Plugin(ArtistExtrasPlugin):
                         'strArtistBanner') and self.config.cparser.value('theaudiodb/banners',
                                                                          type=bool):
                     imagecache.fill_queue(config=self.config,
-                                          artist=oldartist,
+                                          artist=metadata['imagecacheartist'],
                                           imagetype='artistbanner',
                                           urllist=[artdata['strArtistBanner']])
 
@@ -103,7 +102,7 @@ class Plugin(ArtistExtrasPlugin):
                         'strArtistLogo') and self.config.cparser.value('theaudiodb/logos',
                                                                        type=bool):
                     imagecache.fill_queue(config=self.config,
-                                          artist=oldartist,
+                                          artist=metadata['imagecacheartist'],
                                           imagetype='artistlogo',
                                           urllist=[artdata['strArtistLogo']])
 
@@ -111,7 +110,7 @@ class Plugin(ArtistExtrasPlugin):
                         'strArtistThumb') and self.config.cparser.value('theaudiodb/thumbnails',
                                                                         type=bool):
                     imagecache.fill_queue(config=self.config,
-                                          artist=oldartist,
+                                          artist=metadata['imagecacheartist'],
                                           imagetype='artistthumb',
                                           urllist=[artdata['strArtistThumb']])
 
