@@ -8,6 +8,7 @@
   process.  But the higher quality sources should now be picked first.
 * Added Wikimedia as a source if the wikidata entity URL is available
   as an artist website, such as if Musicbrainz website data is selected.
+  Enabled by default on new installs.
 * Discogs should now honor Discogs artist URLs if they are available
   in the artist website data.
 * With the last two in mind, discogs and wikidata links from Musicbrainz
@@ -26,6 +27,10 @@
   as a more complex example of what can be done with the twitch bot.
 * Twitch chat now has a default announcement template that will be set
   on new installs.
+* Artist Extras now defaults to on for new installs.
+* Changed the method by which the software looks for the 'Documents'
+  folder on new installs because Windows 11 really wants you to use
+  OneDrive.
 
 ## Version 4.0.6 - 2023-06-15
 
