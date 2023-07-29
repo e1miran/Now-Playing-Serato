@@ -21,6 +21,10 @@ REMIX_RE = re.compile(r'^(.*) [\(\[].*[\)\]]$')
 
 musicbrainzngs.musicbrainz._max_retries = 3  # pylint: disable=protected-access
 musicbrainzngs.musicbrainz._timeout = 30  # pylint: disable=protected-access
+# WNP (typically) has large lulls between 2-3 calls that need to happen
+# quickly. so double the rate of calls to speed things up but still
+# keep a rate limiter in case the DJ is doing something stupid
+musicbrainzngs.set_rate_limit(limit_or_interval=.5)
 
 
 @functools.lru_cache(maxsize=128, typed=False)
@@ -204,7 +208,8 @@ class MusicBrainzHelper():
             riddata = self._lastditchrid(addmeta)
 
         if riddata:
-            if riddata['title'] != metadata.get('title'):
+            if normalize(riddata['title']) != normalize(metadata.get('title')):
+                logging.debug('No title match, so just using artist data')
                 for delitem in [
                         'album',
                         'coverimageraw',
@@ -252,15 +257,15 @@ class MusicBrainzHelper():
 
         for isrc in isrclist:
             with contextlib.suppress(Exception):
-                mbdata = musicbrainzngs.get_recordings_by_isrc(isrc,
-                                                               includes=['releases'],
-                                                               release_status=['official'])
+                mbdata = musicbrainzngs.get_recordings_by_isrc(
+                    isrc, includes=['releases'], release_status=['official'])
         if not mbdata:
             for isrc in isrclist:
                 try:
-                    mbdata = musicbrainzngs.get_recordings_by_isrc(isrc, includes=['releases'])
-                except Exception:  # pylint: disable=broad-except
-                    logging.info('musicbrainz cannot find ISRC %s', isrc)
+                    mbdata = musicbrainzngs.get_recordings_by_isrc(
+                        isrc, includes=['releases'])
+                except Exception as error:  # pylint: disable=broad-except
+                    logging.info('musicbrainz cannot find ISRC %s: %s', isrc, error)
 
         if 'isrc' not in mbdata or 'recording-list' not in mbdata['isrc']:
             return None
@@ -302,9 +307,10 @@ class MusicBrainzHelper():
             self._setemail()
 
             try:
-                mbdata = musicbrainzngs.browse_releases(recording=recordingid,
-                                                        includes=['labels', 'artist-credits'],
-                                                        release_status=['official'])
+                mbdata = musicbrainzngs.browse_releases(
+                    recording=recordingid,
+                    includes=['artist-credits', 'labels', 'release-groups', 'release-group-rels'],
+                    release_status=['official'])
             except Exception as error:  # pylint: disable=broad-except
                 logging.error('MusicBrainz threw an error: %s', error)
                 return None
@@ -312,7 +318,11 @@ class MusicBrainzHelper():
             if 'release-count' not in mbdata or mbdata['release-count'] == 0:
                 try:
                     mbdata = musicbrainzngs.browse_releases(recording=recordingid,
-                                                            includes=['labels', 'artist-credits'])
+                                                            includes=[
+                                                                'artist-credits', 'labels',
+                                                                'release-groups',
+                                                                'release-group-rels'
+                                                            ])
                 except Exception as error:  # pylint: disable=broad-except
                     logging.error('MusicBrainz threw an error: %s', error)
                     return None
@@ -339,7 +349,8 @@ class MusicBrainzHelper():
         newdata = {'musicbrainzrecordingid': recordingid}
         try:
             logging.debug('looking up recording id %s', recordingid)
-            mbdata = musicbrainzngs.get_recording_by_id(recordingid, includes=['artists', 'genres'])
+            mbdata = musicbrainzngs.get_recording_by_id(
+                recordingid, includes=['artists', 'genres', 'release-group-rels'])
         except Exception as error:  # pylint: disable=broad-except
             logging.error('MusicBrainz does not know recording id %s: %s', recordingid, error)
             return None
@@ -385,11 +396,18 @@ class MusicBrainzHelper():
             newdata['label'] = label
 
         if 'cover-art-archive' in release and 'artwork' in release['cover-art-archive'] and release[
-                'cover-art-archive']['artwork']:
+                'cover-art-archive']['artwork'] == 'true':
             try:
-                newdata['coverimageraw'] = musicbrainzngs.get_image(release['id'], 'front')
+                newdata['coverimageraw'] = musicbrainzngs.get_image_front(release['id'])
             except Exception as error:  # pylint: disable=broad-except
-                logging.error('Failed to get cover art: %s', error)
+                logging.error('Failed to get release cover art: %s', error)
+
+        if not newdata.get('coverimageraw'):
+            try:
+                newdata['coverimageraw'] = musicbrainzngs.get_release_group_image_front(
+                    release['release-group']['id'])
+            except Exception as error:  # pylint: disable=broad-except
+                logging.error('Failed to get release group cover art: %s', error)
 
         newdata['artistwebsites'] = self._websites(newdata['musicbrainzartistid'])
         #self.recordingid_tempcache[recordingid] = newdata
