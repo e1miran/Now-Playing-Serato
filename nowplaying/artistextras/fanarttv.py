@@ -101,7 +101,7 @@ class Plugin(ArtistExtrasPlugin):
                 thumbnail = sorted(artist['artistthumb'], key=lambda x: x['likes'], reverse=True)
                 imagecache.fill_queue(config=self.config,
                                       artist=metadata['imagecacheartist'],
-                                      imagetype='artistthumb',
+                                      imagetype='artistthumbnail',
                                       urllist=[x['url'] for x in thumbnail])
 
             if self.config.cparser.value('fanarttv/fanart',
@@ -115,7 +115,9 @@ class Plugin(ArtistExtrasPlugin):
 
     def providerinfo(self):  # pylint: disable=no-self-use
         ''' return list of what is provided by this plug-in '''
-        return ['artistbannerraw', 'artistlogoraw', 'artistthumbraw', 'fanarttv-artistfanarturls']
+        return [
+            'artistbannerraw', 'artistlogoraw', 'artistthumbnailraw', 'fanarttv-artistfanarturls'
+        ]
 
     def connect_settingsui(self, qwidget, uihelp):
         ''' pass '''
