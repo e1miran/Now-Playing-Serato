@@ -46,7 +46,7 @@ class Plugin(ArtistExtrasPlugin):
                     page = None
         return page
 
-    def download(self, metadata=None, imagecache=None):
+    def download(self, metadata=None, imagecache=None):  # pylint: disable=too-many-branches
         ''' download content '''
 
         def _get_bio():
@@ -86,11 +86,18 @@ class Plugin(ArtistExtrasPlugin):
             mymeta['artistfanarturls'] = []
             thumbs = []
             if page.images():
+                gotonefanart = False
                 for image in page.images(['kind', 'url']):
                     if image['kind'] in ['wikidata-image', 'parse-image'
                                          ] and self.config.cparser.value('wikimedia/fanart',
                                                                          type=bool):
                         mymeta['artistfanarturls'].append(image['url'])
+                        if not gotonefanart and imagecache:
+                            gotonefanart = True
+                            imagecache.fill_queue(config=self.config,
+                                                  artist=metadata['imagecacheartist'],
+                                                  imagetype='artistfanart',
+                                                  urllist=[image['url']])
                     elif image['kind'] == 'query-thumbnail':
                         thumbs.append(image['url'])
 

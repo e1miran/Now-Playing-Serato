@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 ''' thread to poll music player '''
+
 import asyncio
+import contextlib
 import multiprocessing
 import logging
 import os
@@ -233,7 +235,7 @@ class TrackPoll():  # pylint: disable=too-many-instance-attributes
                 return True
         return False
 
-    async def _fillinmetadata(self, metadata):
+    async def _fillinmetadata(self, metadata):  # pylint: disable=too-many-branches
         ''' keep a copy of our fetched data '''
 
         # Fill in as much metadata as possible. everything
@@ -245,7 +247,10 @@ class TrackPoll():  # pylint: disable=too-many-instance-attributes
         for key in COREMETA:
             fetched = f'fetched{key}'
             if key in metadata:
-                metadata[fetched] = metadata[key]
+                if isinstance(metadata[key], str):
+                    metadata[fetched] = metadata[key].strip()
+                else:
+                    metadata[fetched] = metadata[key]
             else:
                 metadata[fetched] = None
 
@@ -323,6 +328,7 @@ class TrackPoll():  # pylint: disable=too-many-instance-attributes
         await self._half_delay_write()
         await self._process_imagecache()
         self._start_artistfanartpool()
+        await asyncio.sleep(0.5)
 
         # checkagain
         nextcheck = await self.input.getplayingtrack()
@@ -337,6 +343,7 @@ class TrackPoll():  # pylint: disable=too-many-instance-attributes
             if data := await self.trackrequests.get_request(self.currentmeta):
                 self.currentmeta.update(data)
 
+        self._start_artistfanartpool()
         self._artfallbacks()
 
         if not self.testmode:
@@ -358,7 +365,7 @@ class TrackPoll():  # pylint: disable=too-many-instance-attributes
         if not self.currentmeta.get('coverimageraw') and self.imagecache:
             if imagetype := self.config.cparser.value('artistextras/nocoverfallback'):
                 imagetype = imagetype.lower()
-                if imagetype != 'none':
+                if imagetype != 'none' and self.currentmeta.get('imagecacheartist'):
                     self.currentmeta['coverimageraw'] = self.imagecache.random_image_fetch(
                         artist=self.currentmeta['imagecacheartist'], imagetype=f'artist{imagetype}')
 
@@ -450,10 +457,8 @@ class TrackPoll():  # pylint: disable=too-many-instance-attributes
 def stop(pid):
     ''' stop the web server -- called from Tray '''
     logging.info('sending INT to %s', pid)
-    try:
+    with contextlib.suppress(ProcessLookupError):
         os.kill(pid, signal.SIGINT)
-    except ProcessLookupError:
-        pass
 
 
 def start(stopevent, bundledir, testmode=False):  #pylint: disable=unused-argument
