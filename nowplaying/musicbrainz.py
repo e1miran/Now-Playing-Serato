@@ -29,7 +29,7 @@ musicbrainzngs.set_rate_limit(limit_or_interval=.5)
 
 @functools.lru_cache(maxsize=128, typed=False)
 def _verify_artist_name(artistname, artistcredit):
-    logging.debug('called verify_artist_name: %s %s', artistname, artistcredit)
+    logging.debug('called verify_artist_name: %s vs %s', artistname, artistcredit)
     if 'Various Artists' in artistcredit:
         logging.debug('skipped %s -- VA')
         return False
@@ -74,11 +74,16 @@ class MusicBrainzHelper():
                     if isinstance(artdata, dict):
                         artname = artname + artdata['name']
                         artid.append(artdata['artist']['id'])
+                        if testdata.get('artist') and not _verify_artist_name(
+                                artdata['name'], testdata['artist']):
+                            logging.debug('Rejecting bz %s does not appear in %s', artdata['name'],
+                                          testdata['artist'])
+                            return []
                     else:
                         artname = artname + artdata
 
-                if not _verify_artist_name(testdata.get('artist'), artname):
-                    return []
+                #if not _verify_artist_name(testdata.get('artist'), artname):
+                #    return []
                 mbartid = artid
             else:
                 if not _verify_artist_name(testdata.get('artist'),
@@ -114,6 +119,8 @@ class MusicBrainzHelper():
                 logging.debug('skipping recording id %s -- no releases', rid)
                 continue
             mbartid = _check_build_artid()
+            if not mbartid:
+                continue
             for release in recording['release-list']:
                 title = release['title']
                 if testdata.get('album') and normalize_text(
