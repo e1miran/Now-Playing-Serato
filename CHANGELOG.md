@@ -1,7 +1,7 @@
 
 # Changelog
 
-## Version 4.1.0 - Unreleased
+## Version 4.1.0 - 2023-08-20
 
 * IMPORTANT! SOME SETTINGS WILL BE CHANGED:
   * Artist Extras support is now on
