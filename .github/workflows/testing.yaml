@@ -57,6 +57,7 @@ jobs:
           fi
           source /tmp/venv/bin/activate
           pytest --durations=10 -s tests
+          coverage xml
       - name: artifact mac test
         uses: actions/upload-artifact@v4
         if: always()
@@ -66,14 +67,15 @@ jobs:
             .coverage
             .coverage.*
             htmlcov
-      - name: coveralls
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN}}
-          COVERALLS_PARALLEL: true
-          COVERALLS_FLAG_NAME: macos
-        run: |
-          source /tmp/venv/bin/activate
-          coveralls --service=github
+      - name: codecov
+        uses: codecov/codecov-action@v4
+        with:
+          fail_ci_if_error: true  # optional (default = false)
+          files: ./coverage.xml  # optional
+          flags: unittests  # optional
+          name: codecov-mac11  # optional
+          token: ${{ secrets.CODECOV_TOKEN }}  # required
+          verbose: true  # optional (default = false)
 
   testing-win:
     runs-on: windows-2019
@@ -114,6 +116,7 @@ jobs:
             popd
           fi
           pytest --durations=10 -s tests
+          coverage xml
       - name: artifact windows test
         uses: actions/upload-artifact@v4
         if: always()
@@ -123,13 +126,15 @@ jobs:
             .coverage
             .coverage.*
             htmlcov
-      - name: coveralls
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN}}
-          COVERALLS_PARALLEL: true
-          COVERALLS_FLAG_NAME: windows
-        run: |
-          coveralls --service=github
+      - name: codecov
+        uses: codecov/codecov-action@v4
+        with:
+          fail_ci_if_error: true  # optional (default = false)
+          files: ./coverage.xml  # optional
+          flags: unittests  # optional
+          name: codecov-windows  # optional
+          token: ${{ secrets.CODECOV_TOKEN }}  # required
+          verbose: true  # optional (default = false)
 
   testing-linux:
     runs-on: ubuntu-latest
@@ -206,6 +211,7 @@ jobs:
           fi
           source /tmp/venv/bin/activate
           pytest --durations=10 -s
+          coverage xml
       - name: artifact linux test
         uses: actions/upload-artifact@v4
         if: always()
@@ -215,14 +221,16 @@ jobs:
             .coverage
             .coverage.*
             htmlcov
-      - name: coveralls
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN}}
-          COVERALLS_PARALLEL: true
-          COVERALLS_FLAG_NAME: linux
-        run: |
-          source /tmp/venv/bin/activate
-          coveralls --service=github
+      - name: codecov
+        uses: codecov/codecov-action@v4
+        with:
+          fail_ci_if_error: true  # optional (default = false)
+          files: ./coverage.xml  # optional
+          flags: unittests  # optional
+          name: codecov-linux  # optional
+          token: ${{ secrets.CODECOV_TOKEN }}  # required
+          verbose: true  # optional (default = false)
+
 
   merge:
     if: always()
@@ -258,6 +266,7 @@ jobs:
           source /tmp/venv/bin/activate
           coverage combine artifacts/*/.coverage artifacts/*/.coverage.*
           coverage html
+          coverage xml
       - name: artifact full tests
         uses: actions/upload-artifact@v4
         if: always()
@@ -266,9 +275,12 @@ jobs:
           path: |
             .coverage
             htmlcov
-      - name: coveralls
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN}}
-        run: |
-          source /tmp/venv/bin/activate
-          coveralls --service=github --finish
+      - name: codecov
+        uses: codecov/codecov-action@v4
+        with:
+          fail_ci_if_error: true  # optional (default = false)
+          files: ./coverage.xml
+          flags: unittests  # optional
+          name: codecov-umbrella  # optional
+          token: ${{ secrets.CODECOV_TOKEN }}  # required
+          verbose: true  # optional (default = false)
